@@ -43,7 +43,7 @@ Thumbs.db
 
 # Generated files
 generated/
-# bindings/ temporarily tracked only in our prototype branch
+bindings/
 
 # Logs
 *.log
