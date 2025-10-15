@@ -41,7 +41,7 @@ _build/
 .DS_Store
 Thumbs.db
 
-# Generated files
+# Generated files and directories
 generated/
 bindings/
 
