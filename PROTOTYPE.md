@@ -193,7 +193,7 @@ This is a **prototype** demonstrating the concept. Current limitations:
 - No support for lists/arrays
 - Single direction: OCaml → Python (not Python → OCaml callbacks)
 
-## Next Steps (Option B)
+## Next Steps (After prototype):
 
 For the production version, we'll add:
 - Complex type support (records, variants, lists)
@@ -203,19 +203,3 @@ For the production version, we'll add:
 - Multiple language backends (not just Python)
 - CLI with more options
 - Proper testing suite
-
-## Contributing
-
-This is an open prototype! Feel free to extend it with:
-- More type support
-- Better parsing
-- Additional target languages
-- Improved error handling
-
-## License
-
-MIT (or your choice)
-
----
-
-**Built to solve real FFI pain points in Python + OCaml projects**
