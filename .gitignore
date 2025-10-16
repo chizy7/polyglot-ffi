@@ -47,3 +47,16 @@ bindings/
 
 # Logs
 *.log
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Tool caches
+.ruff_cache/
+.mypy_cache/
+
+# Temporary files
+*.tmp
+.polyglot-cache/
