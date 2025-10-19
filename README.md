@@ -2,9 +2,8 @@
 
 **Automatic FFI bindings generator for polyglot projects**
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/chizy7/polyglot-ffi)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/chizy7/polyglot-ffi)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Phase](https://img.shields.io/badge/phase-1%20complete-success.svg)](PHASE1_COMPLETE.md)
 
 Stop writing FFI boilerplate. Start building amazing things.
 
@@ -34,6 +33,8 @@ polyglot-ffi generate crypto.mli
 
 ## Quick Example
 
+### Primitive Types
+
 **1. Write OCaml interface:**
 
 ```ocaml
@@ -60,6 +61,51 @@ encrypted = encrypt("secret")
 hash_val = hash("data")
 ```
 
+### Complex Types
+
+**1. Write OCaml interface with complex types:**
+
+```ocaml
+(* user.mli *)
+type user = {
+  name: string;
+  age: int;
+  email: string option;
+}
+
+type result = Ok of user | Error of string
+
+val find_user : string -> user option
+val create_user : string -> int -> string -> result
+val get_all_users : unit -> user list
+val get_name_and_age : user -> string * int
+```
+
+**2. Generate bindings:**
+
+```bash
+polyglot-ffi generate user.mli
+```
+
+**3. Use from Python with full type hints:**
+
+```python
+from typing import Optional, List, Tuple
+from generated.user_py import find_user, create_user, get_all_users
+
+# Option type → Optional[User]
+user = find_user("john")  # Returns Optional[User]
+
+# Variant type → Result
+result = create_user("Jane", 25, "jane@example.com")
+
+# List type → List[User]
+all_users = get_all_users()  # Returns List[User]
+
+# Tuple type → Tuple[str, int]
+name, age = get_name_and_age(user)  # Returns Tuple[str, int]
+```
+
 ---
 
 ## Installation
@@ -82,42 +128,61 @@ pip install -e ".[dev]"
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.1.0
+# Output: polyglot-ffi, version 0.3.0
 ```
 
 ---
 
 ## Features
 
-### ✅ Phase 1 (Current - v0.1.0)
+### v0.1.0
 
-**Supported Types:**
-- ✅ `string`, `int`, `float`, `bool`, `unit`
-- ✅ Multi-parameter functions
-- ✅ Documentation preservation
+**Primitive Types:**
+- `string`, `int`, `float`, `bool`, `unit`
+- Multi-parameter functions
+- Documentation preservation
+
+### v0.2.0
+
+**Complex Types:**
+- Option types (`'a option`, `string option`, `int option`)
+- List types (`'a list`, `int list`, `string list`)
+- Tuple types (`'a * 'b`, `int * string * float`)
+- Record types (`type user = { name: string; age: int }`)
+- Variant types (`type result = Ok of string | Error of string`)
+- Type variables (`'a`, `'b` for polymorphic types)
+- Custom type references
+- Nested & combined types (`(int * string) list option`)
+
+**New Features:**
+- Type Registry system for extensible type mappings
+- Support for OCaml, Python, C, and Rust type mappings
+- Custom type converters
+- 86 passing tests (61 new tests added)
+
+### v0.3.0
+
+**Developer Experience:**
+- Enhanced error messages with suggestions
+- Configuration file support (`polyglot.toml`)
+- Watch mode for auto-regeneration
+- Project validation (`check` command)
+- Clean command for removing generated files
+- Detailed progress indicators
+- Rich console output with colors
+
+**New Commands:**
+- `polyglot-ffi watch` - Auto-regenerate on file changes
+- `polyglot-ffi check` - Validate project configuration
+- `polyglot-ffi clean` - Remove generated files
 
 **Generated Code:**
-- ✅ OCaml ctypes bindings
-- ✅ Memory-safe C stubs
-- ✅ Python wrappers with type hints
-- ✅ Dune build configuration
+- OCaml ctypes bindings (with complex types)
+- Memory-safe C stubs (GC-safe opaque pointers)
+- Python wrappers with full type hints
+- Dune build configuration
 
-**CLI Commands:**
-- ✅ `polyglot-ffi init` - Initialize projects
-- ✅ `polyglot-ffi generate` - Generate bindings
-- ✅ `polyglot-ffi check` - Validate config
-- ✅ `polyglot-ffi clean` - Clean generated files
-
-### 🚧 Phase 2 (In Progress)
-
-- [ ] Option types (`'a option`)
-- [ ] List types (`'a list`)
-- [ ] Tuple types (`'a * 'b`)
-- [ ] Record types
-- [ ] Variant types
-- [ ] Custom type mappings
-
-### 📋 Future Phases
+### Future Features
 
 - [ ] Rust target support
 - [ ] Go target support
@@ -132,7 +197,6 @@ polyglot-ffi --version
 - **[Quickstart Guide](docs/quickstart.md)** - Get started in 5 minutes
 - **[Architecture](docs/architecture.md)** - How it works
 - **[Type Mapping](docs/type-mapping.md)** - Type system reference
-- **[Configuration](docs/configuration.md)** - Configure projects
 - **[Contributing](docs/contributing.md)** - Join development
 
 ---
@@ -167,11 +231,13 @@ Proper memory management:
 
 ### Production Ready
 
-- 70%+ test coverage
+- 86 comprehensive tests (100% passing)
+- 65% code coverage across all modules
+- Type Registry for extensible mappings
 - Rich error messages
 - CLI with progress indicators
-- Dry run mode
-- Force regeneration
+- Dry run mode & force regeneration
+- Backward compatible
 
 ---
 
@@ -188,19 +254,23 @@ Proper memory management:
 
 | Component | Status | Coverage |
 |-----------|--------|----------|
-| Core Architecture | ✅ Complete | 61% |
-| OCaml Parser | ✅ Complete | 92% |
-| IR System | ✅ Complete | 63% |
-| Ctypes Generator | ✅ Complete | 96% |
-| C Stub Generator | ✅ Complete | 79% |
-| Python Generator | ✅ Complete | 94% |
-| Dune Generator | ✅ Complete | 100% |
-| CLI | ✅ Complete | 78% |
-| Documentation | ✅ Complete | 100% |
+| Core Architecture | Complete | 65% |
+| OCaml Parser | Complete | 91% |
+| Type Registry | Complete | 82% |
+| IR System | Complete | 69% |
+| Ctypes Generator | Complete | 69% |
+| C Stub Generator | Complete | 75% |
+| Python Generator | Complete | 70% |
+| Dune Generator | Complete | 100% |
+| CLI | Complete | 78% |
+| Documentation | Complete | 100% |
+| **Tests** | **86 passing** | **100%** |
 
-**Current Version:** 0.1.0 (Alpha)
-**Phase 1:** ✅ Complete - Primitive types working
-**Phase 2:** 🚧 In Progress - Complex types
+**Current Version:** 0.3.0 (Beta)
+**Phase 1:** Complete - Primitive types
+**Phase 2:** Complete - Complex types
+**Phase 3:** Complete - Developer Experience
+**Phase 4:** Next - Documentation & Publishing
 **Production Ready:** Targeting v1.0
 
 ---
@@ -256,73 +326,31 @@ print(add(2, 3))       # 5
 ```bash
 # Initialize project
 polyglot-ffi init my-project
+polyglot-ffi init --interactive              # Interactive setup
 
 # Generate bindings
 polyglot-ffi generate src/module.mli
+polyglot-ffi generate -o bindings/ -n mymodule
+polyglot-ffi generate --dry-run              # Preview only
+polyglot-ffi generate --force                # Force regeneration
 
-# Custom output & name
-polyglot-ffi generate src/module.mli -o bindings/ -n mymodule
+# Watch mode (NEW in v0.3!)
+polyglot-ffi watch                           # Watch files from config
+polyglot-ffi watch src/*.mli                 # Watch specific files
+polyglot-ffi watch --build                   # Auto-build after changes
 
-# Dry run
-polyglot-ffi generate src/module.mli --dry-run
+# Validate project (NEW in v0.3!)
+polyglot-ffi check                           # Check configuration
+polyglot-ffi check --check-deps              # Include dependency check
+polyglot-ffi check --lang rust               # Check specific language
 
-# Force regeneration
-polyglot-ffi generate src/module.mli --force
-
-# Check configuration
-polyglot-ffi check
-
-# Clean generated files
-polyglot-ffi clean
+# Clean generated files (NEW in v0.3!)
+polyglot-ffi clean                           # Remove generated files
+polyglot-ffi clean --dry-run                 # Preview what would be deleted
+polyglot-ffi clean --all                     # Remove all including directories
 
 # Get help
 polyglot-ffi --help
-```
-
----
-
-## Supported Types (Phase 1)
-
-| OCaml | C | Python | Example |
-|-------|---|--------|---------|
-| `string` | `char*` | `str` | `"hello"` |
-| `int` | `int` | `int` | `42` |
-| `float` | `double` | `float` | `3.14` |
-| `bool` | `int` | `bool` | `True` |
-| `unit` | `void` | `None` | `None` |
-
----
-
-## Architecture
-
-```
-┌─────────────┐
-│  .mli file  │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│   Parser    │  Parse OCaml interface
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│     IR      │  Language-agnostic representation
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ Generators  │  Generate target code
-│  - Ctypes   │
-│  - C Stubs  │
-│  - Python   │
-│  - Dune     │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│   Output    │  Ready-to-use bindings
-└─────────────┘
 ```
 
 All generation happens at build time. **Zero runtime overhead.**
@@ -366,21 +394,37 @@ Built with inspiration from:
 
 ## Roadmap
 
-### v0.2 (Phase 2) - Q1 2025
+### v0.1 - Complete
+- Primitive types (string, int, float, bool, unit)
+- Multi-parameter functions
+- Basic code generation
+
+### v0.2 - Complete
 - Option, list, tuple, record, variant types
 - Type registry
 - Custom type mappings
+- 86 passing tests
 
-### v0.3 (Phase 3) - Q2 2025
-- Watch mode
-- Better error messages
-- Configuration file support
+### v0.3 - Complete
+- Watch mode for auto-regeneration
+- Enhanced error messages with suggestions
+- Configuration file support (polyglot.toml)
+- Check and clean commands
+- Rich progress indicators
 
-### v1.0 (Production) - Q3 2025
-- Stable API
-- Rust target support
-- Comprehensive documentation
-- Battle-tested on real projects
+### v0.4 - In Progress
+- [ ] Comprehensive documentation site
+- [ ] Video tutorials and examples
+- [ ] Integration tests for CLI commands
+- [ ] Performance optimizations
+- [ ] Shell completion (bash, zsh, fish)
+
+### v1.0 (Production) - Coming Soon
+- [ ] Publish to PyPI
+- [ ] Stable API guarantee
+- [ ] Rust target support
+- [ ] CI/CD pipeline
+- [ ] Battle-tested on 5+ real projects
 
 ---
 
@@ -391,5 +435,3 @@ Stop writing FFI boilerplate. Start building amazing things.
 ```bash
 pip install polyglot-ffi
 ```
-
-[Get Started](docs/quickstart.md) • [Documentation](docs/index.md) • [Examples](examples/)

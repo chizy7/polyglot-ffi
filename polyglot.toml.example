@@ -1,0 +1,51 @@
+# Polyglot FFI Configuration File
+# This file configures automatic FFI bindings generation
+
+[project]
+name = "my-crypto-lib"
+version = "0.1.0"
+description = "Cryptography library with FFI bindings"
+authors = ["Your Name <you@example.com>"]
+
+[source]
+language = "ocaml"
+dir = "src"
+files = [
+    "crypto.mli",
+    "hash.mli",
+]
+# Optionally exclude files
+exclude = ["internal.mli"]
+
+# Define target languages
+# You can have multiple [[targets]] blocks
+
+[[targets]]
+language = "python"
+output_dir = "generated/python"
+enabled = true
+
+[[targets]]
+language = "rust"
+output_dir = "generated/rust"
+enabled = false  # Disabled for now
+
+[build]
+auto_build = false
+# build_command = "dune build"  # Custom build command
+
+# Custom type mappings (optional)
+# Override default type mappings for specific types
+[type_mappings]
+
+[type_mappings.binary_data]
+ocaml = "bytes"
+python = "bytes"
+rust = "Vec<u8>"
+c = "uint8_t*"
+
+[type_mappings.timestamp]
+ocaml = "float"
+python = "float"
+rust = "f64"
+c = "double"

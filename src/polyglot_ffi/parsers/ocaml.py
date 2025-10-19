@@ -2,7 +2,9 @@
 OCaml .mli parser for extracting function signatures and types.
 
 This parser handles OCaml interface files and converts them to IR.
-Phase 1 focuses on primitive types only.
+Primitive types,
+Complex types (options, lists, tuples, records, variants),
+Enhanced error messages with suggestions
 """
 
 import re
@@ -19,30 +21,27 @@ from polyglot_ffi.ir.types import (
     IRModule,
     IRParameter,
     IRType,
+    IRTypeDefinition,
     TypeKind,
     ir_list,
     ir_option,
     ir_primitive,
 )
-
-
-class ParseError(Exception):
-    """Raised when parsing fails."""
-
-    def __init__(self, message: str, line: Optional[int] = None, column: Optional[int] = None):
-        self.line = line
-        self.column = column
-        if line is not None:
-            message = f"Line {line}: {message}"
-        super().__init__(message)
+from polyglot_ffi.utils.errors import (
+    ParseError,
+    suggest_type_fix,
+    suggest_syntax_fix,
+)
 
 
 class OCamlParser:
     """
     Parse OCaml .mli interface files into IR.
 
-    Phase 1: Supports primitive types (string, int, float, bool, unit)
-    Future: Will support options, lists, records, variants
+    Supports:
+    - Primitive types (string, int, float, bool, unit)
+    - Complex types (option, list, tuple, record, variant)
+    - Type variables ('a, 'b, etc.)
     """
 
     # Primitive type mappings
@@ -63,11 +62,12 @@ class OCamlParser:
         """Parse the content and return an IR module."""
         module_name = Path(self.filename).stem
         functions = self._extract_functions()
+        type_definitions = self._extract_type_definitions()
 
         return IRModule(
             name=module_name,
             functions=functions,
-            type_definitions=[],  # Phase 1: No custom types
+            type_definitions=type_definitions,
             doc="",
         )
 
@@ -89,6 +89,150 @@ class OCamlParser:
                 i += 1
 
         return functions
+
+    def _extract_type_definitions(self) -> List[IRTypeDefinition]:
+        """Extract all type definitions (records and variants) from the file."""
+        type_defs = []
+        i = 0
+
+        while i < len(self.lines):
+            line = self.lines[i].strip()
+
+            # Look for type definitions starting with 'type'
+            if line.startswith("type ") and "=" in line:
+                typedef, lines_consumed = self._parse_type_definition(self.lines[i:], i + 1)
+                if typedef:
+                    type_defs.append(typedef)
+                i += lines_consumed
+            else:
+                i += 1
+
+        return type_defs
+
+    def _parse_type_definition(
+        self, lines: List[str], start_line: int
+    ) -> Tuple[Optional[IRTypeDefinition], int]:
+        """
+        Parse a type definition (record or variant).
+
+        Examples:
+            type user = { name: string; age: int }
+            type result = Ok of string | Error of string
+            type status = Success | Failure | Pending
+        """
+        # Combine lines until we have the complete definition
+        full_def = ""
+        lines_consumed = 0
+
+        for j, line in enumerate(lines):
+            stripped = line.strip()
+            full_def += " " + stripped
+            lines_consumed += 1
+
+            # Check if definition is complete
+            # A simple heuristic: ends with a closing brace or doesn't have '|' at end
+            if stripped.endswith("}") or ("|" not in stripped and j > 0):
+                break
+            # Also stop if next line doesn't continue the definition
+            if j + 1 < len(lines):
+                next_line = lines[j + 1].strip()
+                if next_line and not next_line.startswith("|") and "{" not in full_def:
+                    break
+
+        full_def = full_def.strip()
+
+        try:
+            # Match: type name = definition
+            match = re.match(r"type\s+(\w+)\s*=\s*(.+)", full_def)
+            if not match:
+                raise ParseError(f"Invalid type definition: {full_def}", start_line)
+
+            type_name = match.group(1)
+            type_body = match.group(2).strip()
+
+            # Determine if it's a record or variant
+            if type_body.startswith("{") and type_body.endswith("}"):
+                # Record type
+                return self._parse_record_type(type_name, type_body, start_line), lines_consumed
+            elif "|" in type_body or (type_body[0].isupper() and " of " in type_body):
+                # Variant type
+                return self._parse_variant_type(type_name, type_body, start_line), lines_consumed
+            else:
+                # Type alias - treat as custom named type
+                aliased_type = self._parse_type(type_body, start_line)
+                # For now, we'll skip pure type aliases as they don't need special handling
+                return None, lines_consumed
+
+        except ParseError as e:
+            raise ParseError(f"Error parsing type definition: {e}", start_line)
+
+    def _parse_record_type(
+        self, type_name: str, type_body: str, line_num: int
+    ) -> IRTypeDefinition:
+        """
+        Parse a record type definition.
+
+        Example: { name: string; age: int; email: string }
+        """
+        # Remove braces
+        inner = type_body[1:-1].strip()
+
+        # Split by semicolon
+        field_strs = [f.strip() for f in inner.split(";") if f.strip()]
+
+        fields = {}
+        for field_str in field_strs:
+            # Match: field_name : type
+            match = re.match(r"(\w+)\s*:\s*(.+)", field_str)
+            if not match:
+                raise ParseError(
+                    f"Invalid record field: '{field_str}' in type '{type_name}'", line_num
+                )
+
+            field_name = match.group(1)
+            field_type_str = match.group(2).strip()
+            field_type = self._parse_type(field_type_str, line_num)
+            fields[field_name] = field_type
+
+        return IRTypeDefinition(
+            name=type_name, kind=TypeKind.RECORD, fields=fields, doc=""
+        )
+
+    def _parse_variant_type(
+        self, type_name: str, type_body: str, line_num: int
+    ) -> IRTypeDefinition:
+        """
+        Parse a variant (sum) type definition.
+
+        Examples:
+            Ok of string | Error of string
+            Success | Failure | Pending
+        """
+        # Split by pipe
+        variant_strs = [v.strip() for v in type_body.split("|")]
+
+        variants = {}
+        for variant_str in variant_strs:
+            # Match: Constructor or Constructor of type
+            match = re.match(r"(\w+)(?:\s+of\s+(.+))?", variant_str)
+            if not match:
+                raise ParseError(
+                    f"Invalid variant: '{variant_str}' in type '{type_name}'", line_num
+                )
+
+            constructor = match.group(1)
+            type_str = match.group(2)
+
+            if type_str:
+                variant_type = self._parse_type(type_str.strip(), line_num)
+                variants[constructor] = variant_type
+            else:
+                # Constructor without payload
+                variants[constructor] = None
+
+        return IRTypeDefinition(
+            name=type_name, kind=TypeKind.VARIANT, variants=variants, doc=""
+        )
 
     def _parse_function(
         self, lines: List[str], start_line: int
@@ -183,8 +327,12 @@ class OCamlParser:
         """
         Parse a type string into an IRType.
 
-        Phase 1: Only primitives
-        Future phases: options, lists, records, variants
+        Supports:
+        - Primitives: string, int, float, bool, unit
+        - Options: 'a option, int option, string option, etc.
+        - Lists: 'a list, int list, string list, etc.
+        - Tuples: 'a * 'b, int * string, etc.
+        - Records and Variants: (complex type definitions)
         """
         type_str = type_str.strip()
 
@@ -192,11 +340,53 @@ class OCamlParser:
         if type_str in self.PRIMITIVE_TYPES:
             return self.PRIMITIVE_TYPES[type_str]
 
-        # Phase 1: Only primitives supported
+        # Check for option types: "X option"
+        option_match = re.match(r"(.+?)\s+option$", type_str)
+        if option_match:
+            inner_type_str = option_match.group(1).strip()
+            inner_type = self._parse_type(inner_type_str, line_num)
+            return ir_option(inner_type)
+
+        # Check for list types: "X list"
+        list_match = re.match(r"(.+?)\s+list$", type_str)
+        if list_match:
+            inner_type_str = list_match.group(1).strip()
+            inner_type = self._parse_type(inner_type_str, line_num)
+            return ir_list(inner_type)
+
+        # Check for tuple types: "X * Y" or "X * Y * Z"
+        if " * " in type_str:
+            # Handle parentheses around tuples
+            if type_str.startswith("(") and type_str.endswith(")"):
+                type_str = type_str[1:-1].strip()
+
+            # Split by * and parse each component
+            parts = [p.strip() for p in type_str.split("*")]
+            tuple_types = [self._parse_type(part, line_num) for part in parts]
+
+            from polyglot_ffi.ir.types import ir_tuple
+            return ir_tuple(*tuple_types)
+
+        # Check for type variables: 'a, 'b, etc.
+        if re.match(r"^'[a-z]$", type_str):
+            # Type variables represent generic/polymorphic types
+            # For now, treat them as a special primitive
+            return ir_primitive(type_str)
+
+        # Check for custom named types (records, variants, or type aliases)
+        # These are identifiers that don't match primitives
+        if re.match(r"^[a-z_][a-z0-9_]*$", type_str):
+            # This is a custom type reference
+            # We'll create it as a CUSTOM type kind
+            return IRType(kind=TypeKind.CUSTOM, name=type_str)
+
+        # If we reach here, it's an unsupported type
+        suggestions = suggest_type_fix(type_str)
         raise ParseError(
-            f"Unsupported type: '{type_str}'. "
-            f"Phase 1 only supports: {', '.join(self.PRIMITIVE_TYPES.keys())}",
-            line_num,
+            message=f"Unsupported type: '{type_str}'",
+            file_path=Path(self.filename) if self.filename != "<unknown>" else None,
+            line=line_num,
+            suggestions=suggestions,
         )
 
     @classmethod

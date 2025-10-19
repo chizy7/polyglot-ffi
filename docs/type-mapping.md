@@ -1,14 +1,16 @@
 # Type Mapping Reference
 
-## Phase 1 - Primitive Types
+Complete guide to type mappings across languages in Polyglot FFI.
 
-| OCaml | IR | C | Python | Notes |
-|-------|-------|-------------|-----------------|-------|
-| `string` | `STRING` | `char*` | `str` | UTF-8 encoded |
-| `int` | `INT` | `int` | `int` | 31/63-bit on OCaml |
-| `float` | `FLOAT` | `double` | `float` | IEEE 754 |
-| `bool` | `BOOL` | `int` | `bool` | 0=false, 1=true |
-| `unit` | `UNIT` | `void` | `None` | No value |
+## Primitive Types 
+
+| OCaml | IR | C | Python | Rust | Notes |
+|-------|-------|-------|--------|------|-------|
+| `string` | `STRING` | `char*` | `str` | `String` | UTF-8 encoded |
+| `int` | `INT` | `int` | `int` | `i64` | 31/63-bit on OCaml |
+| `float` | `FLOAT` | `double` | `float` | `f64` | IEEE 754 |
+| `bool` | `BOOL` | `int` | `bool` | `bool` | 0=false, 1=true |
+| `unit` | `UNIT` | `void` | `None` | `()` | No value |
 
 ## Conversion Details
 
@@ -69,56 +71,200 @@ ml_bool = Val_bool(c_bool);
 int c_bool = Bool_val(ml_bool);
 ```
 
-## Coming in Phase 2
+## Complex Types 
 
 ### Option Types
 
+**OCaml:**
 ```ocaml
 val find : string -> string option
+val parse : string -> int option
 ```
 
-Maps to:
-- C: Custom struct or NULL pointer
-- Python: `Optional[str]`
+**Type Mappings:**
+
+| Language | Type | Representation |
+|----------|------|----------------|
+| OCaml | `'a option` | `Some x` or `None` |
+| IR | `OPTION` | `IRType(kind=OPTION, params=[...])` |
+| C | `void*` | Opaque pointer (GC-safe) |
+| Python | `Optional[T]` | `value` or `None` |
+| Rust | `Option<T>` | `Some(value)` or `None` |
+
+**Example:**
+```python
+# Python
+user = find_user("john")  # Returns Optional[User]
+if user is not None:
+    print(user.name)
+```
 
 ### List Types
 
+**OCaml:**
 ```ocaml
-val process : int list -> int list
+val get_all : unit -> string list
+val filter : (int -> bool) -> int list -> int list
 ```
 
-Maps to:
-- C: Linked list or array
-- Python: `List[int]`
+**Type Mappings:**
+
+| Language | Type | Representation |
+|----------|------|----------------|
+| OCaml | `'a list` | `[x; y; z]` |
+| IR | `LIST` | `IRType(kind=LIST, params=[...])` |
+| C | `void*` | Opaque OCaml list pointer |
+| Python | `List[T]` | `[x, y, z]` |
+| Rust | `Vec<T>` | `vec![x, y, z]` |
+
+**Example:**
+```python
+# Python
+users = get_all_users()  # Returns List[User]
+for user in users:
+    print(user.name)
+```
 
 ### Tuple Types
 
+**OCaml:**
 ```ocaml
-val pair : int * string -> float
+val pair : string -> int * string
+val triple : unit -> int * string * float
 ```
 
-Maps to:
-- C: Struct
-- Python: `Tuple[int, str]`
+**Type Mappings:**
+
+| Language | Type | Representation |
+|----------|------|----------------|
+| OCaml | `'a * 'b` | `(x, y)` |
+| IR | `TUPLE` | `IRType(kind=TUPLE, params=[...])` |
+| C | `void*` | Opaque tuple pointer |
+| Python | `Tuple[T1, T2]` | `(x, y)` |
+| Rust | `(T1, T2)` | `(x, y)` |
+
+**Example:**
+```python
+# Python
+name, age = get_name_and_age(user)  # Returns Tuple[str, int]
+print(f"{name} is {age} years old")
+```
 
 ### Record Types
 
+**OCaml:**
 ```ocaml
-type user = { name: string; age: int }
-val get_user : unit -> user
+type user = {
+  name: string;
+  age: int;
+  email: string option;
+}
+
+val create_user : string -> int -> string -> user
+val get_name : user -> string
 ```
 
-Maps to:
-- C: Struct
-- Python: dataclass or dict
+**Type Mappings:**
+
+| Language | Type | Representation |
+|----------|------|----------------|
+| OCaml | `type t = { ... }` | Record with fields |
+| IR | `RECORD` | `IRTypeDefinition(kind=RECORD, fields={...})` |
+| C | `void*` | Opaque record pointer |
+| Python | `class User` | Python class |
+| Rust | `struct User` | Rust struct |
+
+**Example:**
+```python
+# Python (type hint generated)
+def create_user(name: str, age: int, email: str) -> User:
+    pass
+
+user = create_user("John", 25, "john@example.com")
+```
 
 ### Variant Types
 
+**OCaml:**
 ```ocaml
 type result = Ok of string | Error of string
-val process : unit -> result
+type status = Active | Inactive | Pending
+
+val process : string -> result
+val check : user -> status
 ```
 
-Maps to:
-- C: Tagged union
-- Python: Union type or class hierarchy
+**Type Mappings:**
+
+| Language | Type | Representation |
+|----------|------|----------------|
+| OCaml | `type t = A \| B of 'a` | Sum type with constructors |
+| IR | `VARIANT` | `IRTypeDefinition(kind=VARIANT, variants={...})` |
+| C | `void*` | Opaque variant pointer |
+| Python | `class Result` | Python class (enum-like) |
+| Rust | `enum Result` | Rust enum |
+
+**Example:**
+```python
+# Python
+result = process("input")  # Returns Result
+# Handle different variants in application logic
+```
+
+### Type Variables (Polymorphic Types)
+
+**OCaml:**
+```ocaml
+val identity : 'a -> 'a
+val map : ('a -> 'b) -> 'a list -> 'b list
+```
+
+**Type Mappings:**
+
+| Language | Type | Representation |
+|----------|------|----------------|
+| OCaml | `'a`, `'b` | Type variables |
+| IR | `PRIMITIVE` | `IRType(kind=PRIMITIVE, name="'a")` |
+| C | `void*` | Generic pointer |
+| Python | `Any` | `typing.Any` |
+| Rust | `T`, `U` | Generic type parameters |
+
+### Complex Combinations
+
+**Nested Types:**
+```ocaml
+val find : string -> user option
+val get_optional_lists : unit -> int list option
+val process : (int * string) list -> string list option
+```
+
+**Python Mappings:**
+```python
+def find(input: str) -> Optional[User]: ...
+def get_optional_lists() -> Optional[List[int]]: ...
+def process(pairs: List[Tuple[int, str]]) -> Optional[List[str]]: ...
+```
+
+## Complete Type Matrix
+
+### All Supported Types
+
+| OCaml Type | IR Kind | C Type | Python Type | Rust Type |
+|------------|---------|--------|-------------|-----------|
+| **Primitives** |
+| `string` | `PRIMITIVE` | `char*` | `str` | `String` |
+| `int` | `PRIMITIVE` | `int` | `int` | `i64` |
+| `float` | `PRIMITIVE` | `double` | `float` | `f64` |
+| `bool` | `PRIMITIVE` | `int` | `bool` | `bool` |
+| `unit` | `PRIMITIVE` | `void` | `None` | `()` |
+| **Containers** |
+| `'a option` | `OPTION` | `void*` | `Optional[T]` | `Option<T>` |
+| `'a list` | `LIST` | `void*` | `List[T]` | `Vec<T>` |
+| `'a * 'b` | `TUPLE` | `void*` | `Tuple[T1, T2]` | `(T1, T2)` |
+| **Custom** |
+| `type t = {...}` | `RECORD` | `void*` | `T` (class) | `struct T` |
+| `type t = A \| B` | `VARIANT` | `void*` | `T` (class) | `enum T` |
+| `'a` | `PRIMITIVE` | `void*` | `Any` | `T` |
+| **Combined** |
+| `int list option` | nested | `void*` | `Optional[List[int]]` | `Option<Vec<i64>>` |
+| `(int * string) list` | nested | `void*` | `List[Tuple[int, str]]` | `Vec<(i64, String)>` |

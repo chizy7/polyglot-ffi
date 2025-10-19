@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "polyglot-ffi"
-version = "0.1.0"
+version = "0.3.0"
 description = "Automatic FFI bindings generator for polyglot projects"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -32,6 +32,7 @@ dependencies = [
     "rich>=13.0.0",
     "tomli>=2.0.0; python_version < '3.11'",
     "pydantic>=2.0.0",
+    "watchdog>=3.0.0",
 ]
 
 [project.optional-dependencies]

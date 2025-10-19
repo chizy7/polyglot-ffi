@@ -4,8 +4,16 @@
 
 Polyglot FFI uses a multi-stage pipeline to generate FFI bindings:
 
-```
-Source File (.mli) → Parser → IR → Type Mapper → Generators → Output Files
+```mermaid
+flowchart LR
+    A["Source File (.mli)"] --> B["Parser"]
+    B --> C["IR"]
+    C --> D["Type Registry"]
+    D --> E["Generators"]
+    E --> F["Output Files"]
+
+    C --> G["Type Mappings<br/>(OCaml / Python / C / Rust)"]
+
 ```
 
 ## Design Principles
@@ -15,6 +23,7 @@ Source File (.mli) → Parser → IR → Type Mapper → Generators → Output F
 3. **Type-Safe** - Preserves type information throughout pipeline
 4. **Memory-Safe** - Proper CAMLparam/CAMLreturn, no leaks
 5. **Testable** - Each component independently unit tested
+6. **Extensible Type System** - Type Registry allows custom type mappings
 
 ## Components
 
@@ -44,21 +53,95 @@ module = parse_mli_file("crypto.mli")
 - `IRModule` - Top-level module
 - `IRFunction` - Function with params and return type
 - `IRParameter` - Function parameter
-- `IRType` - Type representation (primitive, option, list, record, variant)
+- `IRType` - Type representation (primitive, option, list, tuple, record, variant)
+- `IRTypeDefinition` - Custom type definitions (records, variants)
 - `TypeKind` - Enum of type categories
+
+**Enhancements:**
+- Added `OPTION`, `LIST`, `TUPLE` type kinds
+- Added `RECORD` and `VARIANT` type kinds
+- Support for nested and combined types
+- Type variables for polymorphic functions
 
 **Example:**
 ```python
-from polyglot_ffi.ir.types import IRFunction, IRParameter, STRING, INT
+from polyglot_ffi.ir.types import (
+    IRFunction, IRParameter, STRING, INT,
+    ir_option, ir_list, ir_tuple
+)
 
+# Simple function
 func = IRFunction(
     name="add",
     params=[IRParameter("x", INT), IRParameter("y", INT)],
     return_type=INT
 )
+
+# Function with complex types
+find_func = IRFunction(
+    name="find_user",
+    params=[IRParameter("name", STRING)],
+    return_type=ir_option(STRING)  # Returns string option
+)
 ```
 
-### 3. Generators (`src/polyglot_ffi/generators/`)
+### 3. Type Registry (`src/polyglot_ffi/type_system/`) 
+
+**Purpose:** Manage type mappings between languages
+
+The Type Registry provides centralized, extensible type mapping management.
+
+**Key Components:**
+
+#### A. TypeRegistry (`registry.py`)
+- Registers primitive type mappings
+- Handles complex type conversions
+- Supports custom type converters
+- Validates type mappings
+
+**Example:**
+```python
+from polyglot_ffi.type_system import TypeRegistry
+
+registry = TypeRegistry()
+
+# Register a primitive type
+registry.register_primitive("string", {
+    "ocaml": "string",
+    "python": "str",
+    "c": "char*",
+    "rust": "String"
+})
+
+# Get mapping for target language
+python_type = registry.get_mapping(ir_type, "python")
+```
+
+#### B. Built-in Types (`builtin.py`)
+Pre-registered mappings for all standard types:
+- Primitives: string, int, float, bool, unit
+- Complex: option, list, tuple types
+- Multi-language support: OCaml, Python, C, Rust
+
+**Features:**
+- Automatic handling of `Optional[T]`, `List[T]`, `Tuple[T1, T2]`
+- Consistent naming conventions across languages
+- Extensible via custom converters
+
+**Example:**
+```python
+from polyglot_ffi.type_system import get_default_registry
+from polyglot_ffi.ir.types import ir_option, STRING
+
+registry = get_default_registry()
+
+# Automatic complex type mapping
+option_str = ir_option(STRING)
+python_type = registry.get_mapping(option_str, "python")
+# Returns: "Optional[str]"
+```
+
+### 4. Generators (`src/polyglot_ffi/generators/`)
 
 #### A. Ctypes Generator (`ctypes_gen.py`)
 
@@ -88,12 +171,12 @@ Generates build configuration:
 - `dune` - Library and rule definitions
 - `dune-project` - Project metadata
 
-### 4. Commands (`src/polyglot_ffi/commands/`)
+### 5. Commands (`src/polyglot_ffi/commands/`)
 
 - `init.py` - Project scaffolding
 - `generate.py` - Binding generation orchestration
 
-### 5. CLI (`src/polyglot_ffi/cli/main.py`)
+### 6. CLI (`src/polyglot_ffi/cli/main.py`)
 
 Click-based command-line interface with rich output.
 
@@ -182,11 +265,3 @@ generated/
 - **Parsing**: < 10ms for typical files
 - **Generation**: < 100ms total
 - **Zero runtime overhead**: All code generated at build time
-
-## Future Architecture
-
-Phase 2 will add:
-- **Type Registry** - Extensible type mapping system
-- **Plugin System** - Load generators dynamically
-- **Caching** - Cache parsed IR for speed
-- **Config System** - Support `polyglot.toml` fully

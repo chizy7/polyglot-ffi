@@ -50,7 +50,7 @@ verbose = false
 
 ### [generate]
 
-- `watch` - Enable watch mode (boolean, default: false) - Coming in Phase 3
+- `watch` - Enable watch mode (boolean, default: false) 
 - `verbose` - Verbose output (boolean, default: false)
 
 ## CLI Options
@@ -73,7 +73,3 @@ polyglot-ffi generate src/module.mli --dry-run
 # Force regeneration
 polyglot-ffi generate src/module.mli --force
 ```
-
-## Environment Variables
-
-Not yet supported - Coming in Phase 3.

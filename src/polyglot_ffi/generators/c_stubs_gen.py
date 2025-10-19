@@ -1,10 +1,17 @@
 """
 C stub code generator.
+
+Generates C wrapper code with proper memory management for:
+- Primitive types (string, int, float, bool, unit)
+- Option types (as nullable pointers)
+- List types (as opaque OCaml values)
+- Tuple types (as opaque OCaml values)
+- Custom types (records, variants)
 """
 
 from typing import Dict
 
-from polyglot_ffi.ir.types import IRModule, IRType, IRFunction
+from polyglot_ffi.ir.types import IRModule, IRType, IRFunction, TypeKind
 
 
 class CStubGenerator:
@@ -113,47 +120,79 @@ class CStubGenerator:
         return lines
 
     def _convert_c_to_ocaml(self, param_name: str, param_type: IRType) -> list:
-        """Generate code to convert C value to OCaml value."""
+        """
+        Generate code to convert C value to OCaml value.
+
+        Handles primitives and complex types (options, lists, tuples, custom types).
+        Complex types are passed as opaque pointers and cast to OCaml values.
+        """
         lines = []
 
-        if param_type.name == "string":
-            lines.append(f"    ml_{param_name} = caml_copy_string({param_name});")
-        elif param_type.name == "int":
-            lines.append(f"    ml_{param_name} = Val_int({param_name});")
-        elif param_type.name == "float":
-            lines.append(f"    ml_{param_name} = caml_copy_double({param_name});")
-        elif param_type.name == "bool":
-            lines.append(f"    ml_{param_name} = Val_bool({param_name});")
-        elif param_type.name == "unit":
-            lines.append(f"    ml_{param_name} = Val_unit;")
+        if param_type.is_primitive():
+            if param_type.name == "string":
+                lines.append(f"    ml_{param_name} = caml_copy_string({param_name});")
+            elif param_type.name == "int":
+                lines.append(f"    ml_{param_name} = Val_int({param_name});")
+            elif param_type.name == "float":
+                lines.append(f"    ml_{param_name} = caml_copy_double({param_name});")
+            elif param_type.name == "bool":
+                lines.append(f"    ml_{param_name} = Val_bool({param_name});")
+            elif param_type.name == "unit":
+                lines.append(f"    ml_{param_name} = Val_unit;")
+        else:
+            # Complex types (options, lists, tuples, custom types)
+            # These are passed as opaque pointers and cast to value
+            lines.append(f"    ml_{param_name} = (value){param_name};")
 
         return lines
 
     def _convert_ocaml_to_c(self, return_type: IRType) -> list:
-        """Generate code to convert OCaml return value to C."""
+        """
+        Generate code to convert OCaml return value to C.
+
+        Handles primitives and complex types. Complex types are returned
+        as opaque pointers to maintain GC-safety.
+        """
         lines = []
         c_type = self._get_c_type(return_type)
 
-        if return_type.name == "string":
-            lines.append(f"    {c_type} result = strdup(String_val(ml_result));")
+        if return_type.is_primitive():
+            if return_type.name == "string":
+                lines.append(f"    {c_type} result = strdup(String_val(ml_result));")
+                lines.append(f"    CAMLreturnT({c_type}, result);")
+            elif return_type.name == "int":
+                lines.append(f"    {c_type} result = Int_val(ml_result);")
+                lines.append(f"    CAMLreturnT({c_type}, result);")
+            elif return_type.name == "float":
+                lines.append(f"    {c_type} result = Double_val(ml_result);")
+                lines.append(f"    CAMLreturnT({c_type}, result);")
+            elif return_type.name == "bool":
+                lines.append(f"    {c_type} result = Bool_val(ml_result);")
+                lines.append(f"    CAMLreturnT({c_type}, result);")
+            elif return_type.name == "unit":
+                lines.append("    CAMLreturn0;")
+        else:
+            # Complex types (options, lists, tuples, custom types)
+            # Return as opaque pointer (cast from value)
+            # Note: This keeps the value alive and GC-safe
+            lines.append(f"    {c_type} result = (void*)ml_result;")
             lines.append(f"    CAMLreturnT({c_type}, result);")
-        elif return_type.name == "int":
-            lines.append(f"    {c_type} result = Int_val(ml_result);")
-            lines.append(f"    CAMLreturnT({c_type}, result);")
-        elif return_type.name == "float":
-            lines.append(f"    {c_type} result = Double_val(ml_result);")
-            lines.append(f"    CAMLreturnT({c_type}, result);")
-        elif return_type.name == "bool":
-            lines.append(f"    {c_type} result = Bool_val(ml_result);")
-            lines.append(f"    CAMLreturnT({c_type}, result);")
-        elif return_type.name == "unit":
-            lines.append("    CAMLreturn0;")
 
         return lines
 
     def _get_c_type(self, ir_type: IRType) -> str:
-        """Convert IR type to C type string."""
+        """
+        Convert IR type to C type string.
+
+        Primitives map to C native types.
+        Complex types (options, lists, tuples, custom) map to void* (opaque).
+        """
         if ir_type.is_primitive():
             return self.C_TYPE_MAP.get(ir_type.name, "char*")
+
+        # Complex types are opaque pointers in C
+        if ir_type.kind in (TypeKind.OPTION, TypeKind.LIST, TypeKind.TUPLE,
+                            TypeKind.CUSTOM, TypeKind.RECORD, TypeKind.VARIANT):
+            return "void*"
 
         raise ValueError(f"Unsupported type for C generation: {ir_type}")

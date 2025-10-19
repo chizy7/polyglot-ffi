@@ -44,6 +44,8 @@ Thumbs.db
 # Generated files and directories
 generated/
 bindings/
+/PLANNING.md
+/SETUP_GUIDE.md
 
 # Logs
 *.log

@@ -1,10 +1,17 @@
 """
 Python wrapper generator.
+
+Generates Python wrapper code with support for:
+- Primitive types (string, int, float, bool, unit)
+- Option types (Optional[T])
+- List types (List[T])
+- Tuple types (Tuple[T1, T2, ...])
+- Custom types (records, variants)
 """
 
 from typing import Dict
 
-from polyglot_ffi.ir.types import IRModule, IRType, IRFunction
+from polyglot_ffi.ir.types import IRModule, IRType, IRFunction, TypeKind
 
 
 class PythonGenerator:
@@ -36,7 +43,7 @@ class PythonGenerator:
             "",
             "import ctypes",
             "from pathlib import Path",
-            "from typing import Optional",
+            "from typing import Optional, List, Tuple, Any",
             "",
             "# Load the shared library",
             f'_lib_path = Path(__file__).parent / "lib{module_name}.so"',
@@ -119,15 +126,60 @@ class PythonGenerator:
         return lines
 
     def _get_py_type(self, ir_type: IRType) -> str:
-        """Convert IR type to Python type hint."""
+        """
+        Convert IR type to Python type hint.
+
+        Handles:
+        - Primitives: str, int, float, bool, None
+        - Options: Optional[T]
+        - Lists: List[T]
+        - Tuples: Tuple[T1, T2, ...]
+        - Custom types: Class names
+        """
         if ir_type.is_primitive():
             return self.PY_TYPE_MAP.get(ir_type.name, "str")
+
+        # Handle option types
+        if ir_type.kind == TypeKind.OPTION:
+            if ir_type.params:
+                inner_type = self._get_py_type(ir_type.params[0])
+                return f"Optional[{inner_type}]"
+            return "Optional[Any]"
+
+        # Handle list types
+        if ir_type.kind == TypeKind.LIST:
+            if ir_type.params:
+                inner_type = self._get_py_type(ir_type.params[0])
+                return f"List[{inner_type}]"
+            return "List[Any]"
+
+        # Handle tuple types
+        if ir_type.kind == TypeKind.TUPLE:
+            if ir_type.params:
+                tuple_types = [self._get_py_type(p) for p in ir_type.params]
+                return f"Tuple[{', '.join(tuple_types)}]"
+            return "Tuple[Any, ...]"
+
+        # Handle custom types (records, variants)
+        if ir_type.kind in (TypeKind.CUSTOM, TypeKind.RECORD, TypeKind.VARIANT):
+            # Use the type name as a class name (with capitalization)
+            return ir_type.name.capitalize()
 
         raise ValueError(f"Unsupported type for Python generation: {ir_type}")
 
     def _get_ctypes(self, ir_type: IRType) -> str:
-        """Convert IR type to ctypes type."""
+        """
+        Convert IR type to ctypes type.
+
+        For complex types (options, lists, tuples, custom types),
+        we use c_void_p as they're opaque pointers from C's perspective.
+        """
         if ir_type.is_primitive():
             return self.CTYPES_MAP.get(ir_type.name, "ctypes.c_char_p")
+
+        # Complex types are passed as opaque pointers in Phase 2
+        if ir_type.kind in (TypeKind.OPTION, TypeKind.LIST, TypeKind.TUPLE,
+                            TypeKind.CUSTOM, TypeKind.RECORD, TypeKind.VARIANT):
+            return "ctypes.c_void_p"
 
         raise ValueError(f"Unsupported type for ctypes: {ir_type}")

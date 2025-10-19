@@ -1,8 +1,5 @@
 # Polyglot FFI Documentation
 
-**Version:** 0.1.0 (Phase 1)
-**Status:** Alpha - Primitive types support
-
 Welcome to Polyglot FFI! This tool automatically generates FFI (Foreign Function Interface) bindings between programming languages, eliminating the tedious boilerplate of manual ctypes, C stubs, and wrapper code.
 
 ## What is Polyglot FFI?
@@ -60,7 +57,7 @@ polyglot-ffi generate encryption.mli
 
 **Done!** All 100+ lines of boilerplate generated automatically, type-safe, and memory-safe.
 
-## Phase 1 Status (Current)
+## Status
 
 ### What Works Now
 
@@ -88,11 +85,9 @@ polyglot-ffi generate encryption.mli
 - `polyglot-ffi generate` - Generate bindings
 - `polyglot-ffi check` - Validate configuration
 - `polyglot-ffi clean` - Clean generated files
-- `polyglot-ffi watch` - Watch for changes (planned)
+- `polyglot-ffi watch` - Watch for changes
 
-### What's Coming (Phase 2+)
-
-**Phase 2 - Complex Types:**
+**Complex Types:**
 - Option types (`'a option`)
 - List types (`'a list`)
 - Tuple types (`'a * 'b`)
@@ -100,7 +95,7 @@ polyglot-ffi generate encryption.mli
 - Variant/sum types
 - Custom type mappings
 
-**Phase 3 - Developer Experience:**
+**Developer Experience:**
 - Watch mode (auto-regenerate)
 - Better error messages
 - Configuration file support
@@ -200,34 +195,12 @@ Proper memory management:
 
 ## Architecture Overview
 
-```
-┌─────────────┐
-│  .mli file  │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│   Parser    │  Parse OCaml interface
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│     IR      │  Language-agnostic representation
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ Generators  │  Generate target code
-│  - Ctypes   │
-│  - C Stubs  │
-│  - Python   │
-│  - Dune     │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│   Output    │  Ready-to-use bindings
-└─────────────┘
+```mermaid
+flowchart TD
+    A[".mli file"] --> B["Parser<br/><i>Parse OCaml interface</i>"]
+    B --> C["IR<br/><i>Language-agnostic representation</i>"]
+    C --> D["Generators<br/>- Ctypes<br/>- C Stubs<br/>- Python<br/>- Dune<br/><i>Generate target code</i>"]
+    D --> E["Output<br/><i>Ready-to-use bindings</i>"]
 ```
 
 ## Use Cases
@@ -256,14 +229,7 @@ Proper memory management:
 
 ## License
 
-MIT License - See LICENSE file for details.
-
-## Project Status
-
-**Current Version:** 0.1.0 (Alpha)
-**Phase 1:** Complete - Primitive types working
-**Phase 2:** In Progress - Complex types
-**Production Ready:** Targeting v1.0
+MIT License - See [LICENSE](LICENSE) file for details.
 
 ## Next Steps
 

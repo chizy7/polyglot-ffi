@@ -14,7 +14,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.1.0")
+@click.version_option(version="0.3.0")
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool) -> None:
@@ -93,7 +93,12 @@ def init(
         console.print(f"  polyglot-ffi generate")
 
     except Exception as e:
-        console.print(f"[red]Error:[/red] {e}")
+        # Check if it's a polyglot-ffi error with rich formatting
+        from polyglot_ffi.utils.errors import PolyglotFFIError
+        if isinstance(e, PolyglotFFIError):
+            console.print(e.format_rich())
+        else:
+            console.print(f"[red]Error:[/red] {e}")
         if verbose:
             console.print_exception()
         sys.exit(1)
@@ -140,13 +145,24 @@ def generate(
         console.print(f"Using config: {config_path}")
 
     try:
+        from rich.progress import BarColumn, TaskProgressColumn, TimeRemainingColumn
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            TimeRemainingColumn(),
             console=console,
         ) as progress:
-            task = progress.add_task("Generating bindings...", total=None)
+            # Create main task
+            main_task = progress.add_task("[cyan]Generating bindings...", total=5)
 
+            # Parse
+            progress.update(main_task, description="[cyan]Parsing source file...")
+            progress.advance(main_task)
+
+            # Generate (the actual generation happens here)
             result = generate_bindings(
                 source_file=source_file,
                 output_dir=output,
@@ -157,7 +173,17 @@ def generate(
                 verbose=verbose,
             )
 
-            progress.update(task, completed=True)
+            # Update progress for each stage
+            progress.update(main_task, description="[cyan]Generated ctypes bindings")
+            progress.advance(main_task)
+
+            progress.update(main_task, description="[cyan]Generated C stubs")
+            progress.advance(main_task)
+
+            progress.update(main_task, description="[cyan]Generated Python wrappers")
+            progress.advance(main_task)
+
+            progress.update(main_task, description="[green]Complete!", completed=5)
 
         if dry_run:
             console.print("\n[yellow]Dry run - no files written[/yellow]")
@@ -173,7 +199,12 @@ def generate(
             console.print(f"\n[dim]Generated {len(result.get('functions', []))} function(s)[/dim]")
 
     except Exception as e:
-        console.print(f"[red]Error:[/red] {e}")
+        # Check if it's a polyglot-ffi error with rich formatting
+        from polyglot_ffi.utils.errors import PolyglotFFIError
+        if isinstance(e, PolyglotFFIError):
+            console.print(e.format_rich())
+        else:
+            console.print(f"[red]Error:[/red] {e}")
         if verbose:
             console.print_exception()
         sys.exit(1)
@@ -189,13 +220,29 @@ def watch(ctx: click.Context, paths: tuple, build: bool) -> None:
 
     Example:
         polyglot-ffi watch
-        polyglot-ffi watch src/*.mli --build
+        polyglot-ffi watch src/*.mli
+        polyglot-ffi watch --build
     """
+    from polyglot_ffi.commands.watch import watch_files
+    from pathlib import Path
+
     verbose = ctx.obj.get("verbose", False)
 
-    console.print("[yellow]Watch mode not yet implemented[/yellow]")
-    console.print("This will be available in Phase 3")
-    sys.exit(1)
+    try:
+        watch_files(
+            paths=[Path(p) for p in paths],
+            build=build,
+            verbose=verbose,
+        )
+    except Exception as e:
+        from polyglot_ffi.utils.errors import PolyglotFFIError
+        if isinstance(e, PolyglotFFIError):
+            console.print(e.format_rich())
+        else:
+            console.print(f"[red]Error:[/red] {e}")
+        if verbose:
+            console.print_exception()
+        sys.exit(1)
 
 
 @cli.command()
@@ -208,13 +255,30 @@ def check(ctx: click.Context, check_deps: bool, lang: Optional[str]) -> None:
 
     Example:
         polyglot-ffi check
+        polyglot-ffi check --check-deps
         polyglot-ffi check --lang rust
     """
+    from polyglot_ffi.commands.check import check_project, display_check_results
+
     verbose = ctx.obj.get("verbose", False)
 
-    console.print("[yellow]Check command not yet implemented[/yellow]")
-    console.print("This will be available in Phase 3")
-    sys.exit(1)
+    try:
+        results = check_project(check_deps=check_deps, lang=lang)
+        display_check_results(results)
+
+        # Exit with error code if there are errors
+        if results["errors"]:
+            sys.exit(1)
+
+    except Exception as e:
+        from polyglot_ffi.utils.errors import PolyglotFFIError
+        if isinstance(e, PolyglotFFIError):
+            console.print(e.format_rich())
+        else:
+            console.print(f"[red]Error:[/red] {e}")
+        if verbose:
+            console.print_exception()
+        sys.exit(1)
 
 
 @cli.command()
@@ -227,13 +291,24 @@ def clean(ctx: click.Context, all: bool, dry_run: bool) -> None:
 
     Example:
         polyglot-ffi clean
-        polyglot-ffi clean --all --dry-run
+        polyglot-ffi clean --dry-run
+        polyglot-ffi clean --all
     """
+    from polyglot_ffi.commands.clean import clean_project
+
     verbose = ctx.obj.get("verbose", False)
 
-    console.print("[yellow]Clean command not yet implemented[/yellow]")
-    console.print("This will be available in Phase 3")
-    sys.exit(1)
+    try:
+        clean_project(all_files=all, dry_run=dry_run)
+    except Exception as e:
+        from polyglot_ffi.utils.errors import PolyglotFFIError
+        if isinstance(e, PolyglotFFIError):
+            console.print(e.format_rich())
+        else:
+            console.print(f"[red]Error:[/red] {e}")
+        if verbose:
+            console.print_exception()
+        sys.exit(1)
 
 
 def main() -> None:

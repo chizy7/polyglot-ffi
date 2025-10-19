@@ -22,7 +22,7 @@ pip install -e ".[dev]"
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.1.0
+# Output: polyglot-ffi, version 0.3.0
 ```
 
 ## Your First Project
@@ -313,7 +313,7 @@ Make sure the shared library is built and in the correct location. The Python wr
 Check your `.mli` syntax:
 - Use `val name : type` format
 - Currently supports only primitive types
-- Multi-line signatures need continuation (coming in Phase 2)
+- Multi-line signatures need continuation
 
 ## Help and Support
 

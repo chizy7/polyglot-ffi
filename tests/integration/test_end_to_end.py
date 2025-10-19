@@ -107,9 +107,9 @@ val hash : string -> int
         c_stubs = (output_dir / "crypto_stubs.c").read_text()
 
         assert "#include <caml/mlvalues.h>" in c_stubs
-        assert "char* ml_encrypt(char* arg0)" in c_stubs
-        assert "char* ml_decrypt(char* arg0)" in c_stubs
-        assert "int ml_hash(char* arg0)" in c_stubs
+        assert "char* ml_encrypt(char* input)" in c_stubs
+        assert "char* ml_decrypt(char* input)" in c_stubs
+        assert "int ml_hash(char* input)" in c_stubs
         assert "CAMLparam0()" in c_stubs
         assert "caml_callback" in c_stubs
 
@@ -132,9 +132,9 @@ val hash : string -> int
 
         assert "import ctypes" in py_wrapper
         assert "class CryptoError(Exception):" in py_wrapper
-        assert "def encrypt(arg0: str) -> str:" in py_wrapper
-        assert "def decrypt(arg0: str) -> str:" in py_wrapper
-        assert "def hash(arg0: str) -> int:" in py_wrapper
+        assert "def encrypt(input: str) -> str:" in py_wrapper
+        assert "def decrypt(input: str) -> str:" in py_wrapper
+        assert "def hash(input: str) -> int:" in py_wrapper
 
         # Try to compile the Python code
         compile(py_wrapper, "crypto_py.py", "exec")

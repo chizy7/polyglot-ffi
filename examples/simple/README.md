@@ -180,7 +180,7 @@ def encrypt(input: str) -> str:
 - Generate 100+ lines automatically
 - Type-safe, memory-safe, ready to use
 
-## Supported Types (Phase 1)
+## Supported Types 
 
 | OCaml | C | Python |
 |-------|---|--------|
@@ -210,7 +210,7 @@ pip install -e ../..  # Install from repo root
 
 **Parse errors**
 - Check `.mli` syntax matches `val name : type -> type` format
-- Currently only supports primitive types (Phase 1)
+- Currently only supports primitive types
 
 ## Learn More
 
