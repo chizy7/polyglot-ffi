@@ -364,3 +364,228 @@ class TestComplexCombinations:
         )
         result = registry.get_mapping(ir_type, "python")
         assert result == "Tuple[Optional[int], Optional[str]]"
+
+
+class TestCachingAndEdgeCases:
+    """Test caching and edge cases in type registry."""
+
+    def test_cache_hit(self):
+        """Test that caching works and returns cached result."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_primitive("int")
+
+        # First call - cache miss
+        result1 = registry.get_mapping(ir_type, "python")
+
+        # Second call - should hit cache
+        result2 = registry.get_mapping(ir_type, "python")
+
+        assert result1 == result2 == "int"
+
+    def test_option_without_params(self):
+        """Test option type without parameters raises error."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = IRType(kind=TypeKind.OPTION, name="broken_option", params=[])
+        with pytest.raises(TypeMappingError, match="Option type must have a parameter"):
+            registry.get_mapping(ir_type, "python")
+
+    def test_list_without_params(self):
+        """Test list type without parameters raises error."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = IRType(kind=TypeKind.LIST, name="broken_list", params=[])
+        with pytest.raises(TypeMappingError, match="List type must have a parameter"):
+            registry.get_mapping(ir_type, "python")
+
+    def test_tuple_without_params(self):
+        """Test tuple type without parameters raises error."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = IRType(kind=TypeKind.TUPLE, name="broken_tuple", params=[])
+        with pytest.raises(TypeMappingError, match="Tuple type must have parameters"):
+            registry.get_mapping(ir_type, "python")
+
+    def test_option_c_mapping(self):
+        """Test option type maps to nullable pointer in C."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_option(ir_primitive("int"))
+        result = registry.get_mapping(ir_type, "c")
+        assert result == "int*"
+
+    def test_option_ocaml_mapping(self):
+        """Test option type in OCaml."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_option(ir_primitive("string"))
+        result = registry.get_mapping(ir_type, "ocaml")
+        assert result == "string option"
+
+    def test_option_rust_mapping(self):
+        """Test option type in Rust."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_option(ir_primitive("int"))
+        result = registry.get_mapping(ir_type, "rust")
+        assert result == "Option<i64>"
+
+    def test_option_unsupported_lang(self):
+        """Test option type with unsupported language."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_option(ir_primitive("int"))
+        with pytest.raises(TypeMappingError, match="No go mapping"):
+            registry.get_mapping(ir_type, "go")
+
+    def test_list_c_mapping(self):
+        """Test list type maps to pointer in C."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_list(ir_primitive("int"))
+        result = registry.get_mapping(ir_type, "c")
+        assert result == "int*"
+
+    def test_list_ocaml_mapping(self):
+        """Test list type in OCaml."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_list(ir_primitive("string"))
+        result = registry.get_mapping(ir_type, "ocaml")
+        assert result == "string list"
+
+    def test_list_rust_mapping(self):
+        """Test list type in Rust."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_list(ir_primitive("int"))
+        result = registry.get_mapping(ir_type, "rust")
+        assert result == "Vec<i64>"
+
+    def test_list_unsupported_lang(self):
+        """Test list type with unsupported language."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_list(ir_primitive("int"))
+        with pytest.raises(TypeMappingError, match="No go mapping"):
+            registry.get_mapping(ir_type, "go")
+
+    def test_tuple_c_mapping(self):
+        """Test tuple type in C (placeholder)."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_tuple(ir_primitive("int"), ir_primitive("string"))
+        result = registry.get_mapping(ir_type, "c")
+        assert result == "tuple_t"
+
+    def test_tuple_ocaml_mapping(self):
+        """Test tuple type in OCaml."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_tuple(ir_primitive("int"), ir_primitive("string"))
+        result = registry.get_mapping(ir_type, "ocaml")
+        assert result == "(int * string)"
+
+    def test_tuple_rust_mapping(self):
+        """Test tuple type in Rust."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_tuple(ir_primitive("int"), ir_primitive("string"))
+        result = registry.get_mapping(ir_type, "rust")
+        assert result == "(i64, String)"
+
+    def test_tuple_unsupported_lang(self):
+        """Test tuple type with unsupported language."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_tuple(ir_primitive("int"), ir_primitive("string"))
+        with pytest.raises(TypeMappingError, match="No go mapping"):
+            registry.get_mapping(ir_type, "go")
+
+    def test_custom_type_rust(self):
+        """Test custom type in Rust (title case)."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = IRType(kind=TypeKind.CUSTOM, name="user")
+        result = registry.get_mapping(ir_type, "rust")
+        assert result == "User"
+
+    def test_custom_type_unknown_lang(self):
+        """Test custom type with unknown language returns name as-is."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = IRType(kind=TypeKind.CUSTOM, name="user")
+        result = registry.get_mapping(ir_type, "go")
+        assert result == "user"
+
+    def test_unsupported_type_kind(self):
+        """Test unsupported type kind raises error."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        # Create a type with invalid kind (use a valid TypeKind value that's not handled)
+        # Actually, all TypeKind values are handled, so we need to test differently
+        # Let's test that unknown primitive raises error instead
+        ir_type = ir_primitive("unknown_type_xyz")
+        with pytest.raises(TypeMappingError, match="Unknown primitive"):
+            registry.get_mapping(ir_type, "python")
+
+    def test_validate_method_true(self):
+        """Test validate returns True for valid type."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_primitive("int")
+        assert registry.validate(ir_type, "python") is True
+
+    def test_validate_method_false(self):
+        """Test validate returns False for invalid type."""
+        registry = TypeRegistry()
+        register_builtin_types(registry)
+
+        ir_type = ir_primitive("unknown_type")
+        assert registry.validate(ir_type, "python") is False
+
+
+class TestDefaultRegistry:
+    """Test default global registry."""
+
+    def test_get_default_registry(self):
+        """Test getting the default global registry."""
+        from polyglot_ffi.type_system.registry import get_default_registry
+
+        registry = get_default_registry()
+        assert registry is not None
+
+        # Should have builtin types registered
+        ir_type = ir_primitive("int")
+        result = registry.get_mapping(ir_type, "python")
+        assert result == "int"
+
+    def test_default_registry_singleton(self):
+        """Test default registry is a singleton."""
+        from polyglot_ffi.type_system.registry import get_default_registry
+
+        registry1 = get_default_registry()
+        registry2 = get_default_registry()
+
+        assert registry1 is registry2

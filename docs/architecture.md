@@ -2,6 +2,8 @@
 
 ## Overview
 
+**Version:** v0.4.0 
+
 Polyglot FFI uses a multi-stage pipeline to generate FFI bindings:
 
 ```mermaid
@@ -173,12 +175,32 @@ Generates build configuration:
 
 ### 5. Commands (`src/polyglot_ffi/commands/`)
 
-- `init.py` - Project scaffolding
+High-level command implementations:
+
+- `init.py` - Project scaffolding with templates
 - `generate.py` - Binding generation orchestration
+- `check.py` - Project validation and dependency checking
+- `clean.py` - Generated file cleanup
+- `watch.py` - Auto-regenerate on file changes
 
 ### 6. CLI (`src/polyglot_ffi/cli/main.py`)
 
-Click-based command-line interface with rich output.
+Click-based command-line interface with rich output:
+
+**Features:**
+- Progress indicators and spinners
+- Colored output for better UX
+- Shell completions (Bash, Zsh, Fish)
+- Verbose mode for debugging
+- Dry-run mode for preview
+- Force regeneration option
+
+**Commands:**
+- `polyglot-ffi init` - Initialize new project
+- `polyglot-ffi generate` - Generate bindings
+- `polyglot-ffi check` - Validate configuration
+- `polyglot-ffi clean` - Clean generated files
+- `polyglot-ffi watch` - Watch for changes
 
 ## Data Flow
 
@@ -255,10 +277,34 @@ generated/
 
 ## Testing Strategy
 
-- **Unit tests** - Test each component independently
-- **Integration tests** - Test end-to-end generation
-- **Fixtures** - Example `.mli` files for testing
-- **Coverage** - 70%+ target (currently 61%)
+**Current Status (v0.4.0):**
+- **285 tests passing** 
+- **88% code coverage** 
+- **Test suite** covering all components
+
+**Test Categories:**
+
+- **Unit tests** (`tests/unit/`) - Test each component independently
+  - Parser tests (OCaml `.mli` parsing)
+  - Generator tests (ctypes, C stubs, Python, Dune)
+  - Type system tests (primitives, complex types, registry)
+  - IR tests (type definitions, functions, modules)
+
+- **Integration tests** (`tests/integration/`) - Test end-to-end generation
+  - Full generation pipeline
+  - CLI command testing
+  - Multi-file projects
+  - Error handling
+
+- **Fixtures** (`tests/fixtures/`) - Example `.mli` files for testing
+  - Simple functions (primitives)
+  - Complex types (options, lists, tuples)
+  - Real-world examples
+
+**Coverage Configuration:**
+- Excludes CLI entry points (tested via integration tests)
+- Targets business logic and core components
+- Standard production coverage practices
 
 ## Performance
 

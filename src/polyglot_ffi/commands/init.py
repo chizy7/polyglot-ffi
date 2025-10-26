@@ -48,10 +48,10 @@ val add : int -> int -> int
     # Create example .ml implementation
     example_ml = f"""(* {name}.ml - Example implementation *)
 
-let greet name = 
+let greet name =
   "Hello, " ^ name ^ "!"
 
-let add x y = 
+let add x y =
   x + y
 
 (* Register functions for C callbacks *)
@@ -127,32 +127,27 @@ generated/
 
 def generate_config(name: str, target_langs: List[str]) -> str:
     """Generate polyglot.toml configuration file."""
-    langs_str = ", ".join(f'"{lang}"' for lang in target_langs)
+    # Generate [[targets]] array entries
+    targets_str = "\n".join(
+        f'[[targets]]\nlanguage = "{lang}"\noutput_dir = "generated/{lang}"\nenabled = true\n'
+        for lang in target_langs
+    )
 
     return f"""# Polyglot FFI Configuration
 
 [project]
 name = "{name}"
 version = "0.1.0"
-source_lang = "ocaml"
+description = "FFI bindings for {name}"
 
-[languages.ocaml]
-source_dir = "src"
-build_system = "dune"
+[source]
+language = "ocaml"
+dir = "src"
+files = ["{name}.mli"]
 
-[languages.python]
-target_dir = "generated"
-min_version = "3.8"
-
-[bindings]
-auto_discover = true
-interfaces = [
-    "src/{name}.mli"
-]
-
-[generate]
-watch = false
-verbose = false
+{targets_str}
+[build]
+auto_build = false
 """
 
 

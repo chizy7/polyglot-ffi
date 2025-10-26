@@ -1,0 +1,203 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Run tests before release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Run full test suite
+      run: |
+        pytest tests/ -v --cov=src/polyglot_ffi --cov-report=term
+
+    - name: Verify 75% coverage
+      run: |
+        pytest tests/ --cov=src/polyglot_ffi --cov-report=term --cov-fail-under=75
+
+  build:
+    name: Build release packages
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install build tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Build source and wheel distributions
+      run: |
+        python -m build
+
+    - name: Verify distributions
+      run: |
+        twine check dist/*
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-packages
+        path: dist/
+
+  create-release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: release-packages
+        path: dist/
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Extract version from tag
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+        # Extract release notes for this version from CHANGELOG.md
+        # This reads the [X.Y.Z] section from the existing CHANGELOG.md
+        if [ -f CHANGELOG.md ]; then
+          # Extract section for this version
+          sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d' > RELEASE_NOTES.md
+
+          # If nothing found, extract from [Unreleased]
+          if [ ! -s RELEASE_NOTES.md ]; then
+            sed -n "/## \[Unreleased\]/,/## \[/p" CHANGELOG.md | sed '$d' > RELEASE_NOTES.md
+          fi
+
+          # If still nothing, generate from git log
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "## Changes in v$VERSION" > RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+            git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> RELEASE_NOTES.md || echo "- Initial release" >> RELEASE_NOTES.md
+          fi
+        else
+          # No CHANGELOG.md, generate from git log
+          echo "## Changes in v$VERSION" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> RELEASE_NOTES.md || echo "- Initial release" >> RELEASE_NOTES.md
+        fi
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ steps.changelog.outputs.version }}
+        body_path: RELEASE_NOTES.md
+        files: dist/*
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: create-release
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/polyglot-ffi
+
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: release-packages
+        path: dist/
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        skip-existing: true
+
+  publish-docs:
+    name: Publish documentation
+    needs: create-release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+        pip install mkdocs mkdocs-material mkdocstrings[python] mike
+
+    - name: Configure git
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+
+    - name: Extract version
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Deploy docs with mike
+      run: |
+        mike deploy --push --update-aliases ${{ steps.version.outputs.version }} latest
+        mike set-default --push latest
+
+  announce:
+    name: Post-release tasks
+    needs: [publish-pypi, publish-docs]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create success comment
+      run: |
+        echo "Release ${{ github.ref_name }} published successfully!"
+        echo "PyPI: https://pypi.org/project/polyglot-ffi/"
+        echo "Docs: https://chizy7.github.io/polyglot-ffi/"

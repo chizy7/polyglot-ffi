@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://chizy7.github.io/polyglot-ffi/
+    about: Read the documentation for guides and API reference
+  - name: GitHub Discussions
+    url: https://github.com/chizy7/polyglot-ffi/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: Security Issue
+    url: https://github.com/chizy7/polyglot-ffi/security/advisories/new
+    about: Report a security vulnerability (private)

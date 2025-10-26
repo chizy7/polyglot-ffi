@@ -2,8 +2,10 @@
 
 **Automatic FFI bindings generator for polyglot projects**
 
-[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/chizy7/polyglot-ffi)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![PyPI version](https://img.shields.io/pypi/v/polyglot-ffi.svg)](https://pypi.org/project/polyglot-ffi/)
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org)
+[![Build](https://github.com/chizy7/polyglot-ffi/actions/workflows/ci.yml/badge.svg)](https://github.com/chizy7/polyglot-ffi/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/chizy7/polyglot-ffi/branch/master/graph/badge.svg)](https://codecov.io/gh/chizy7/polyglot-ffi)
 
 Stop writing FFI boilerplate. Start building amazing things.
 
@@ -110,7 +112,7 @@ name, age = get_name_and_age(user)  # Returns Tuple[str, int]
 
 ## Installation
 
-### From PyPI (when published)
+### From PyPI
 
 ```bash
 pip install polyglot-ffi
@@ -128,65 +130,41 @@ pip install -e ".[dev]"
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.3.0
+# Output: polyglot_ffi, version 0.4.0
 ```
+
+### Upgrading
+
+To upgrade to the latest version:
+
+```bash
+pip install --upgrade polyglot-ffi
+```
+
+To upgrade to a specific version:
+
+```bash
+pip install --upgrade polyglot-ffi==0.5.0
+```
+
+See the [full installation guide](docs/installation.md) for detailed instructions including:
+- Virtual environment setup
+- Shell completion
+- Troubleshooting
+- Platform-specific notes
+- **[Complete upgrade guide](docs/installation.md#upgrading)** with all options
 
 ---
 
 ## Features
 
-### v0.1.0
+- **Automatic Code Generation**: One command generates OCaml ctypes, C wrappers, Python modules, and build configs.
+- **Plus Many More Features**: Check docs and roadmap!
 
-**Primitive Types:**
-- `string`, `int`, `float`, `bool`, `unit`
-- Multi-parameter functions
-- Documentation preservation
-
-### v0.2.0
-
-**Complex Types:**
-- Option types (`'a option`, `string option`, `int option`)
-- List types (`'a list`, `int list`, `string list`)
-- Tuple types (`'a * 'b`, `int * string * float`)
-- Record types (`type user = { name: string; age: int }`)
-- Variant types (`type result = Ok of string | Error of string`)
-- Type variables (`'a`, `'b` for polymorphic types)
-- Custom type references
-- Nested & combined types (`(int * string) list option`)
-
-**New Features:**
-- Type Registry system for extensible type mappings
-- Support for OCaml, Python, C, and Rust type mappings
-- Custom type converters
-- 86 passing tests (61 new tests added)
-
-### v0.3.0
-
-**Developer Experience:**
-- Enhanced error messages with suggestions
-- Configuration file support (`polyglot.toml`)
-- Watch mode for auto-regeneration
-- Project validation (`check` command)
-- Clean command for removing generated files
-- Detailed progress indicators
-- Rich console output with colors
-
-**New Commands:**
-- `polyglot-ffi watch` - Auto-regenerate on file changes
-- `polyglot-ffi check` - Validate project configuration
-- `polyglot-ffi clean` - Remove generated files
-
-**Generated Code:**
-- OCaml ctypes bindings (with complex types)
-- Memory-safe C stubs (GC-safe opaque pointers)
-- Python wrappers with full type hints
-- Dune build configuration
-
-### Future Features
+### Some Future Features
 
 - [ ] Rust target support
 - [ ] Go target support
-- [ ] Watch mode
 - [ ] Bidirectional bindings
 - [ ] Plugin system
 
@@ -229,16 +207,6 @@ Proper memory management:
 - String ownership handled
 - GC-safe conversions
 
-### Production Ready
-
-- 86 comprehensive tests (100% passing)
-- 65% code coverage across all modules
-- Type Registry for extensible mappings
-- Rich error messages
-- CLI with progress indicators
-- Dry run mode & force regeneration
-- Backward compatible
-
 ---
 
 ## Use Cases
@@ -247,31 +215,6 @@ Proper memory management:
 - **Data Processing**: OCaml for logic, Python for data science
 - **Financial Systems**: OCaml for algorithms, Python for reporting
 - **ML Infrastructure**: OCaml for pipelines, Python for training
-
----
-
-## Project Status
-
-| Component | Status | Coverage |
-|-----------|--------|----------|
-| Core Architecture | Complete | 65% |
-| OCaml Parser | Complete | 91% |
-| Type Registry | Complete | 82% |
-| IR System | Complete | 69% |
-| Ctypes Generator | Complete | 69% |
-| C Stub Generator | Complete | 75% |
-| Python Generator | Complete | 70% |
-| Dune Generator | Complete | 100% |
-| CLI | Complete | 78% |
-| Documentation | Complete | 100% |
-| **Tests** | **86 passing** | **100%** |
-
-**Current Version:** 0.3.0 (Beta)
-**Phase 1:** Complete - Primitive types
-**Phase 2:** Complete - Complex types
-**Phase 3:** Complete - Developer Experience
-**Phase 4:** Next - Documentation & Publishing
-**Production Ready:** Targeting v1.0
 
 ---
 
@@ -391,44 +334,14 @@ Built with inspiration from:
 - [SWIG](http://www.swig.org/) - Multi-language wrapper generator
 
 ---
+## Contact Me
 
-## Roadmap
+For questions, feedback, or collaboration opportunities:
 
-### v0.1 - Complete
-- Primitive types (string, int, float, bool, unit)
-- Multi-parameter functions
-- Basic code generation
-
-### v0.2 - Complete
-- Option, list, tuple, record, variant types
-- Type registry
-- Custom type mappings
-- 86 passing tests
-
-### v0.3 - Complete
-- Watch mode for auto-regeneration
-- Enhanced error messages with suggestions
-- Configuration file support (polyglot.toml)
-- Check and clean commands
-- Rich progress indicators
-
-### v0.4 - In Progress
-- [ ] Comprehensive documentation site
-- [ ] Video tutorials and examples
-- [ ] Integration tests for CLI commands
-- [ ] Performance optimizations
-- [ ] Shell completion (bash, zsh, fish)
-
-### v1.0 (Production) - Coming Soon
-- [ ] Publish to PyPI
-- [ ] Stable API guarantee
-- [ ] Rust target support
-- [ ] CI/CD pipeline
-- [ ] Battle-tested on 5+ real projects
+- **Email**: [chizy@chizyhub.com](mailto:chizy@chizyhub.com)
+- **X(Twitter)**: [![Twitter Follow](https://img.shields.io/twitter/follow/chizyization?style=social)](https://x.com/Chizyization)
 
 ---
-
-**Made with ❤️ for polyglot developers**
 
 Stop writing FFI boilerplate. Start building amazing things.
 

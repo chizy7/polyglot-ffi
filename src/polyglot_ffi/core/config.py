@@ -17,7 +17,7 @@ else:
     except ImportError:
         tomllib = None  # type: ignore
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from polyglot_ffi.utils.errors import ConfigurationError
 
 
@@ -38,7 +38,8 @@ class SourceConfig(BaseModel):
     dir: Optional[str] = Field(None, description="Source directory")
     exclude: List[str] = Field(default_factory=list, description="Files to exclude")
 
-    @validator("language")
+    @field_validator("language")
+    @classmethod
     def validate_language(cls, v: str) -> str:
         """Validate source language."""
         supported = ["ocaml"]
@@ -56,7 +57,8 @@ class TargetConfig(BaseModel):
     output_dir: str = Field(default="generated", description="Output directory")
     enabled: bool = Field(default=True, description="Enable this target")
 
-    @validator("language")
+    @field_validator("language")
+    @classmethod
     def validate_language(cls, v: str) -> str:
         """Validate target language."""
         supported = ["python", "rust", "c"]
@@ -94,15 +96,15 @@ class PolyglotConfig(BaseModel):
         default_factory=dict, description="Custom type mappings"
     )
 
-    @validator("targets")
+    @field_validator("targets")
+    @classmethod
     def validate_targets(cls, v: List[TargetConfig]) -> List[TargetConfig]:
         """Ensure at least one target is configured."""
         if not v:
             raise ValueError("At least one target language must be configured")
         return v
 
-    class Config:
-        extra = "allow"  # Allow extra fields for future expansion
+    model_config = ConfigDict(extra="allow")  # Allow extra fields for future expansion
 
 
 def load_config(config_path: Path) -> PolyglotConfig:

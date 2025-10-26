@@ -1,0 +1,58 @@
+name: Question
+description: Ask a question about using Polyglot FFI
+title: "[Question]: "
+labels: ["question", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question? We're here to help!
+
+        **Before asking:**
+        - Check the [FAQ](https://chizy7.github.io/polyglot-ffi/faq/)
+        - Search [existing issues](https://github.com/chizy7/polyglot-ffi/issues)
+        - Read the [documentation](https://chizy7.github.io/polyglot-ffi/)
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like to know?
+      placeholder: "How do I..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide context about what you're trying to do
+      placeholder: "I'm trying to generate bindings for..."
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What I've Tried
+      description: What have you already attempted?
+      placeholder: "I tried... but..."
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Relevant Code
+      description: Any relevant code samples
+      render: python
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I have checked the documentation
+          required: true
+        - label: I have checked the FAQ
+          required: true
+        - label: I have searched existing issues
+          required: true

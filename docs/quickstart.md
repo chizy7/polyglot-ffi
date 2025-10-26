@@ -4,7 +4,7 @@ Get started with Polyglot FFI in 5 minutes!
 
 ## Installation
 
-### From PyPI (when published)
+### From PyPI
 
 ```bash
 pip install polyglot-ffi
@@ -22,7 +22,7 @@ pip install -e ".[dev]"
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.3.0
+# Output: polyglot-ffi, version 0.4.0
 ```
 
 ## Your First Project
@@ -222,7 +222,9 @@ print(is_even(4))          # True
 print(get_version())       # "1.0.0"
 ```
 
-## Supported Types (Phase 1)
+## Supported Types
+
+### Primitive Types
 
 | OCaml Type | C Type  | Python Type | Example |
 |------------|---------|-------------|---------|
@@ -231,6 +233,16 @@ print(get_version())       # "1.0.0"
 | `float`    | `double`| `float`     | `3.14` |
 | `bool`     | `int`   | `bool`      | `True` |
 | `unit`     | `void`  | `None`      | `None` |
+
+### Complex Types
+
+| OCaml Type | Python Type | Example |
+|------------|-------------|---------|
+| `'a option` | `Optional[T]` | `Optional[int]` |
+| `'a list` | `List[T]` | `List[str]` |
+| `'a * 'b` | `Tuple[T, U]` | `Tuple[int, str]` |
+
+See [Type Mapping Guide](type-mapping.md) for complete reference.
 
 ## Project Structure
 
@@ -284,12 +296,46 @@ watch = false
 verbose = false
 ```
 
+## Advanced Features
+
+### Watch Mode (Auto-regenerate)
+
+```bash
+# Watch files and auto-regenerate on changes
+polyglot-ffi watch src/*.mli
+
+# Watch with auto-build
+polyglot-ffi watch src/*.mli --build
+```
+
+### Validate Configuration
+
+```bash
+# Check project configuration
+polyglot-ffi check
+
+# Check with dependencies
+polyglot-ffi check --check-deps
+```
+
+### Clean Generated Files
+
+```bash
+# Preview what will be deleted
+polyglot-ffi clean --dry-run
+
+# Actually clean
+polyglot-ffi clean
+```
+
 ## Next Steps
 
-- **Complex types**: Wait for Phase 2 (options, lists, records, variants)
+- **Complex types**: Try [options, lists, and tuples](type-mapping.md)
+- **Watch mode**: Use `polyglot-ffi watch` for auto-regeneration
+- **Configuration**: Customize `polyglot.toml` for your project
 - **Multiple modules**: Generate bindings for each `.mli` file
 - **CI/CD**: Add `polyglot-ffi generate` to your build pipeline
-- **Documentation**: Generate docs from OCaml comments
+- **Examples**: Check out `examples/` directory for more patterns
 
 ## Troubleshooting
 
@@ -322,14 +368,36 @@ Check your `.mli` syntax:
 polyglot-ffi --help
 
 # Command-specific help
-polyglot-ffi generate --help
 polyglot-ffi init --help
+polyglot-ffi generate --help
+polyglot-ffi watch --help
+polyglot-ffi check --help
+polyglot-ffi clean --help
 ```
 
-- **Documentation**: [docs/index.md](index.md)
+### Resources
+
+- **Documentation**: https://chizy7.github.io/polyglot-ffi/
+- **Quick Reference**: [quick_reference.md](quick_reference.md)
+- **Type Mapping**: [type-mapping.md](type-mapping.md)
+- **Architecture**: [architecture.md](architecture.md)
 - **Issues**: https://github.com/chizy7/polyglot-ffi/issues
-- **Examples**: See `examples/` directory
+- **Examples**: See `examples/` directory in repository
+
+### Upgrading
+
+```bash
+# Upgrade to latest version
+pip install --upgrade polyglot-ffi
+
+# Check version
+polyglot-ffi --version
+```
+
+See [Installation Guide](installation.md#upgrading) for more options.
 
 ---
 
 **Ready to eliminate FFI boilerplate?** Let's build something amazing!
+
+**Version:** 0.4.0 | **Documentation:** https://chizy7.github.io/polyglot-ffi/

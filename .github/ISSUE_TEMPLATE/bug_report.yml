@@ -1,0 +1,130 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the form below to help us fix it.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: "When I run `polyglot-ffi generate`, it crashes with..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Run `polyglot-ffi init test-project`
+        2. Edit `test-project/src/api.mli`
+        3. Run `polyglot-ffi generate`
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: "The bindings should generate successfully"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: "Got error: ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code Sample
+      description: Minimal code to reproduce the issue (if applicable)
+      render: ocaml
+      placeholder: |
+        (* my_module.mli *)
+        val greet : string -> string
+
+  - type: textarea
+    id: error
+    attributes:
+      label: Error Message / Stack Trace
+      description: Full error message or stack trace
+      render: shell
+      placeholder: |
+        Paste error output here
+
+  - type: input
+    id: version
+    attributes:
+      label: Polyglot FFI Version
+      description: Run `polyglot-ffi --version`
+      placeholder: "0.4.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version
+      description: Run `python --version`
+      placeholder: "3.11.0"
+    validations:
+      required: true
+
+  - type: input
+    id: ocaml-version
+    attributes:
+      label: OCaml Version (if applicable)
+      description: Run `ocaml --version`
+      placeholder: "4.14.1"
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - macOS
+        - Linux (Ubuntu/Debian)
+        - Linux (Fedora/RHEL)
+        - Linux (Arch)
+        - Linux (Other)
+        - Windows
+        - WSL2
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem
+      placeholder: "This started happening after I upgraded to..."
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: I have tested with the latest version
+          required: false
+        - label: I have included a minimal reproducible example
+          required: false

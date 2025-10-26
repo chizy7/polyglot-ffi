@@ -92,13 +92,13 @@ def clean_files(files: Set[Path], dry_run: bool = False) -> int:
             try:
                 if file_path.is_dir():
                     shutil.rmtree(file_path)
-                    console.print(f"  [red]✗[/red] Removed directory: {file_path}")
+                    console.print(f"  [green]✓[/green] Removed directory: {file_path}")
                 else:
                     file_path.unlink()
-                    console.print(f"  [red]✗[/red] Removed file: {file_path}")
+                    console.print(f"  [green]✓[/green] Removed file: {file_path}")
                 count += 1
             except Exception as e:
-                console.print(f"  [yellow]⚠[/yellow] Failed to remove {file_path}: {e}")
+                console.print(f"  [red]✗[/red] Failed to remove {file_path}: {e}")
 
     return count
 
