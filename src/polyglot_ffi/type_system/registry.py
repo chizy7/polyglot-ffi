@@ -12,6 +12,7 @@ from polyglot_ffi.ir.types import IRType, TypeKind
 
 class TypeMappingError(Exception):
     """Raised when a type mapping cannot be found or is invalid."""
+
     pass
 
 
@@ -48,10 +49,7 @@ class TypeRegistry:
         self._mapping_cache.clear()  # Clear cache when registry is modified
 
     def register_converter(
-        self,
-        ir_type_name: str,
-        target_lang: str,
-        converter: Callable[[IRType], str]
+        self, ir_type_name: str, target_lang: str, converter: Callable[[IRType], str]
     ) -> None:
         """
         Register a custom type converter function.
@@ -68,7 +66,9 @@ class TypeRegistry:
 
     def _type_to_cache_key(self, ir_type: IRType) -> tuple:
         """Convert IRType to a hashable cache key."""
-        params_key = tuple(self._type_to_cache_key(p) for p in ir_type.params) if ir_type.params else ()
+        params_key = (
+            tuple(self._type_to_cache_key(p) for p in ir_type.params) if ir_type.params else ()
+        )
         return (ir_type.kind.value, ir_type.name, params_key)
 
     def get_mapping(self, ir_type: IRType, target_lang: str) -> str:
@@ -238,5 +238,6 @@ def get_default_registry() -> TypeRegistry:
         _default_registry = TypeRegistry()
         # Register built-in types
         from polyglot_ffi.type_system.builtin import register_builtin_types
+
         register_builtin_types(_default_registry)
     return _default_registry

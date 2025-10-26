@@ -172,7 +172,7 @@ class TestGenerateConfig:
 
         assert "my_project" in config
         assert "[project]" in config
-        assert "name = \"my_project\"" in config
+        assert 'name = "my_project"' in config
         assert "[source]" in config
         assert "[[targets]]" in config
 
@@ -190,7 +190,7 @@ class TestGenerateConfig:
 
         assert "[source]" in config
         assert "[[targets]]" in config
-        assert "language = \"python\"" in config
+        assert 'language = "python"' in config
 
     def test_generate_config_includes_source_file(self):
         """Test that config references the source .mli file."""
@@ -247,6 +247,7 @@ class TestGenerateReadme:
 
         assert "generated" in readme.lower()
         assert "auto-generated" in readme.lower()
+
 
 class TestGenerateMakefile:
     """Test Makefile generation."""

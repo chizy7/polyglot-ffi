@@ -21,11 +21,7 @@ class TestTypeRegistry:
     def test_register_primitive(self):
         """Test registering a primitive type."""
         registry = TypeRegistry()
-        registry.register_primitive("string", {
-            "python": "str",
-            "rust": "String",
-            "c": "char*"
-        })
+        registry.register_primitive("string", {"python": "str", "rust": "String", "c": "char*"})
 
         ir_type = ir_primitive("string")
         assert registry.get_mapping(ir_type, "python") == "str"
@@ -239,11 +235,7 @@ class TestTupleTypes:
         registry = TypeRegistry()
         register_builtin_types(registry)
 
-        ir_type = ir_tuple(
-            ir_primitive("int"),
-            ir_primitive("string"),
-            ir_primitive("float")
-        )
+        ir_type = ir_tuple(ir_primitive("int"), ir_primitive("string"), ir_primitive("float"))
         result = registry.get_mapping(ir_type, "python")
         assert result == "Tuple[int, str, float]"
 
@@ -358,10 +350,7 @@ class TestComplexCombinations:
         registry = TypeRegistry()
         register_builtin_types(registry)
 
-        ir_type = ir_tuple(
-            ir_option(ir_primitive("int")),
-            ir_option(ir_primitive("string"))
-        )
+        ir_type = ir_tuple(ir_option(ir_primitive("int")), ir_option(ir_primitive("string")))
         result = registry.get_mapping(ir_type, "python")
         assert result == "Tuple[Optional[int], Optional[str]]"
 

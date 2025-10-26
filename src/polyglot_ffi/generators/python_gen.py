@@ -126,9 +126,7 @@ class PythonGenerator:
         # Handle return value
         if func.return_type.name == "string":
             lines.append("        if result is None:")
-            lines.append(
-                f'            raise {error_class}("{func.name} returned NULL")'
-            )
+            lines.append(f'            raise {error_class}("{func.name} returned NULL")')
             lines.append("        return result.decode('utf-8')")
         elif func.return_type.name == "unit":
             lines.append("        return None")
@@ -194,8 +192,14 @@ class PythonGenerator:
             return self.CTYPES_MAP.get(ir_type.name, "ctypes.c_char_p")
 
         # Complex types are passed as opaque pointers (v0.2.0+)
-        if ir_type.kind in (TypeKind.OPTION, TypeKind.LIST, TypeKind.TUPLE,
-                            TypeKind.CUSTOM, TypeKind.RECORD, TypeKind.VARIANT):
+        if ir_type.kind in (
+            TypeKind.OPTION,
+            TypeKind.LIST,
+            TypeKind.TUPLE,
+            TypeKind.CUSTOM,
+            TypeKind.RECORD,
+            TypeKind.VARIANT,
+        ):
             return "ctypes.c_void_p"
 
         raise ValueError(f"Unsupported type for ctypes: {ir_type}")

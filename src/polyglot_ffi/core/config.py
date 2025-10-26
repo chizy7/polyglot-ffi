@@ -44,9 +44,7 @@ class SourceConfig(BaseModel):
         """Validate source language."""
         supported = ["ocaml"]
         if v.lower() not in supported:
-            raise ValueError(
-                f"Unsupported source language: {v}. Supported: {', '.join(supported)}"
-            )
+            raise ValueError(f"Unsupported source language: {v}. Supported: {', '.join(supported)}")
         return v.lower()
 
 
@@ -63,9 +61,7 @@ class TargetConfig(BaseModel):
         """Validate target language."""
         supported = ["python", "rust", "c"]
         if v.lower() not in supported:
-            raise ValueError(
-                f"Unsupported target language: {v}. Supported: {', '.join(supported)}"
-            )
+            raise ValueError(f"Unsupported target language: {v}. Supported: {', '.join(supported)}")
         return v.lower()
 
 

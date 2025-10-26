@@ -345,9 +345,7 @@ enabled = true
         # Some files should be cleaned
         assert count >= 0
 
-    def test_clean_project_dry_run(
-        self, temp_dir, generated_files_dir, monkeypatch, capsys
-    ):
+    def test_clean_project_dry_run(self, temp_dir, generated_files_dir, monkeypatch, capsys):
         """Test clean in dry-run mode."""
         monkeypatch.chdir(temp_dir)
 
@@ -615,7 +613,8 @@ language = "python"
         from polyglot_ffi.utils.errors import ConfigurationError
 
         invalid_schema = temp_dir / "invalid_schema.toml"
-        invalid_schema.write_text("""
+        invalid_schema.write_text(
+            """
 [project]
 name = "test"
 
@@ -625,7 +624,8 @@ files = ["test.mli"]
 
 [[targets]]
 language = "python"
-""")
+"""
+        )
 
         with pytest.raises(ConfigurationError) as exc_info:
             load_config(invalid_schema)
@@ -637,14 +637,16 @@ language = "python"
         from polyglot_ffi.utils.errors import ConfigurationError
 
         no_targets = temp_dir / "no_targets.toml"
-        no_targets.write_text("""
+        no_targets.write_text(
+            """
 [project]
 name = "test"
 
 [source]
 language = "ocaml"
 files = ["test.mli"]
-""")
+"""
+        )
 
         # Config loads but validator should catch empty targets
         try:
@@ -695,7 +697,8 @@ files = ["test.mli"]
     def test_validate_config_duplicate_targets(self, temp_dir):
         """Test validation warning for duplicate target languages."""
         duplicate_targets = temp_dir / "duplicate.toml"
-        duplicate_targets.write_text("""
+        duplicate_targets.write_text(
+            """
 [project]
 name = "test"
 
@@ -708,7 +711,8 @@ language = "python"
 
 [[targets]]
 language = "python"
-""")
+"""
+        )
 
         config = load_config(duplicate_targets)
         warnings = validate_config(config)
@@ -718,7 +722,8 @@ language = "python"
     def test_validate_config_no_enabled_targets(self, temp_dir):
         """Test validation warning when no targets are enabled."""
         no_enabled = temp_dir / "no_enabled.toml"
-        no_enabled.write_text("""
+        no_enabled.write_text(
+            """
 [project]
 name = "test"
 
@@ -729,7 +734,8 @@ files = ["test.mli"]
 [[targets]]
 language = "python"
 enabled = false
-""")
+"""
+        )
 
         config = load_config(no_enabled)
         warnings = validate_config(config)

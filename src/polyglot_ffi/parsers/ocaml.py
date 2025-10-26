@@ -172,9 +172,7 @@ class OCamlParser:
         except ParseError as e:
             raise ParseError(f"Error parsing type definition: {e}", start_line)
 
-    def _parse_record_type(
-        self, type_name: str, type_body: str, line_num: int
-    ) -> IRTypeDefinition:
+    def _parse_record_type(self, type_name: str, type_body: str, line_num: int) -> IRTypeDefinition:
         """
         Parse a record type definition.
 
@@ -200,9 +198,7 @@ class OCamlParser:
             field_type = self._parse_type(field_type_str, line_num)
             fields[field_name] = field_type
 
-        return IRTypeDefinition(
-            name=type_name, kind=TypeKind.RECORD, fields=fields, doc=""
-        )
+        return IRTypeDefinition(name=type_name, kind=TypeKind.RECORD, fields=fields, doc="")
 
     def _parse_variant_type(
         self, type_name: str, type_body: str, line_num: int
@@ -236,9 +232,7 @@ class OCamlParser:
                 # Constructor without payload
                 variants[constructor] = None
 
-        return IRTypeDefinition(
-            name=type_name, kind=TypeKind.VARIANT, variants=variants, doc=""
-        )
+        return IRTypeDefinition(name=type_name, kind=TypeKind.VARIANT, variants=variants, doc="")
 
     def _parse_function(
         self, lines: List[str], start_line: int
@@ -371,6 +365,7 @@ class OCamlParser:
             tuple_types = [self._parse_type(part, line_num) for part in parts]
 
             from polyglot_ffi.ir.types import ir_tuple
+
             return ir_tuple(*tuple_types)
 
         # Check for type variables: 'a, 'b, etc.

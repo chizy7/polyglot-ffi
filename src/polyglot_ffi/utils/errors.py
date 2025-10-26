@@ -146,6 +146,7 @@ class ValidationError(PolyglotFFIError):
 
 # Error suggestion helpers
 
+
 def suggest_type_fix(invalid_type: str) -> List[str]:
     """Suggest fixes for invalid type names."""
     suggestions = []
@@ -173,7 +174,9 @@ def suggest_type_fix(invalid_type: str) -> List[str]:
 
     # Check for option vs optional
     if "optional" in invalid_type.lower():
-        suggestions.append("Use '[cyan]option[/cyan]' instead of 'optional' (e.g., 'string option')")
+        suggestions.append(
+            "Use '[cyan]option[/cyan]' instead of 'optional' (e.g., 'string option')"
+        )
 
     # Check for array/list confusion
     if "array" in invalid_type.lower():
@@ -192,15 +195,21 @@ def suggest_syntax_fix(syntax_error: str) -> List[str]:
     suggestions = []
 
     if "signature" in syntax_error.lower():
-        suggestions.append("Function signature format: [cyan]val name : type1 -> type2 -> return_type[/cyan]")
+        suggestions.append(
+            "Function signature format: [cyan]val name : type1 -> type2 -> return_type[/cyan]"
+        )
         suggestions.append("Example: [dim]val encrypt : string -> string[/dim]")
 
     if "record" in syntax_error.lower():
-        suggestions.append("Record format: [cyan]type name = { field1: type1; field2: type2 }[/cyan]")
+        suggestions.append(
+            "Record format: [cyan]type name = { field1: type1; field2: type2 }[/cyan]"
+        )
         suggestions.append("Don't forget semicolons between fields!")
 
     if "variant" in syntax_error.lower():
-        suggestions.append("Variant format: [cyan]type name = Constructor1 | Constructor2 of type[/cyan]")
+        suggestions.append(
+            "Variant format: [cyan]type name = Constructor1 | Constructor2 of type[/cyan]"
+        )
         suggestions.append("Example: [dim]type result = Ok of string | Error of string[/dim]")
 
     return suggestions

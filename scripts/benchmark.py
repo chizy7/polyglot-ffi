@@ -65,7 +65,7 @@ val combine : string option list -> int list option
     total, avg = time_function(
         "Simple MLI (3 functions)",
         lambda: OCamlParser(simple_mli, "simple.mli").parse(),
-        iterations=1000
+        iterations=1000,
     )
     print(f"  Simple MLI (3 functions):")
     print(f"    Total: {total:.2f}ms (1000 runs)")
@@ -75,7 +75,7 @@ val combine : string option list -> int list option
     total, avg = time_function(
         "Complex Types (4 functions)",
         lambda: OCamlParser(complex_mli, "complex.mli").parse(),
-        iterations=1000
+        iterations=1000,
     )
     print(f"  Complex Types (4 functions):")
     print(f"    Total: {total:.2f}ms (1000 runs)")
@@ -85,7 +85,7 @@ val combine : string option list -> int list option
     total, avg = time_function(
         "Large MLI (100 functions)",
         lambda: OCamlParser(large_mli, "large.mli").parse(),
-        iterations=100
+        iterations=100,
     )
     print(f"  Large MLI (100 functions):")
     print(f"    Total: {total:.2f}ms (100 runs)")
@@ -101,9 +101,7 @@ def benchmark_type_registry():
 
     # Benchmark primitive type lookups
     total, avg = time_function(
-        "Primitive type lookup",
-        lambda: registry.get_mapping(STRING, "python"),
-        iterations=10000
+        "Primitive type lookup", lambda: registry.get_mapping(STRING, "python"), iterations=10000
     )
     print(f"  Primitive type lookup (string):")
     print(f"    Total: {total:.2f}ms (10000 runs)")
@@ -112,9 +110,7 @@ def benchmark_type_registry():
     # Benchmark option type lookups
     option_type = ir_option(STRING)
     total, avg = time_function(
-        "Option type lookup",
-        lambda: registry.get_mapping(option_type, "python"),
-        iterations=10000
+        "Option type lookup", lambda: registry.get_mapping(option_type, "python"), iterations=10000
     )
     print(f"  Option type lookup (string option):")
     print(f"    Total: {total:.2f}ms (10000 runs)")
@@ -125,7 +121,7 @@ def benchmark_type_registry():
     total, avg = time_function(
         "Complex nested type",
         lambda: registry.get_mapping(complex_type, "python"),
-        iterations=10000
+        iterations=10000,
     )
     print(f"  Complex type lookup (option[list[tuple[str, int]]]):")
     print(f"    Total: {total:.2f}ms (10000 runs)")
@@ -149,9 +145,7 @@ val verify : string -> bool
     # Benchmark ctypes generator
     gen = CtypesGenerator()
     total, avg = time_function(
-        "Ctypes generator",
-        lambda: gen.generate_type_description(module),
-        iterations=1000
+        "Ctypes generator", lambda: gen.generate_type_description(module), iterations=1000
     )
     print(f"  Ctypes generator (4 functions):")
     print(f"    Total: {total:.2f}ms (1000 runs)")
@@ -160,9 +154,7 @@ val verify : string -> bool
     # Benchmark C stubs generator
     gen = CStubGenerator()
     total, avg = time_function(
-        "C stubs generator",
-        lambda: gen.generate_stubs(module, "crypto"),
-        iterations=1000
+        "C stubs generator", lambda: gen.generate_stubs(module, "crypto"), iterations=1000
     )
     print(f"  C stubs generator (4 functions):")
     print(f"    Total: {total:.2f}ms (1000 runs)")
@@ -171,9 +163,7 @@ val verify : string -> bool
     # Benchmark Python generator
     gen = PythonGenerator()
     total, avg = time_function(
-        "Python generator",
-        lambda: gen.generate(module, "crypto"),
-        iterations=1000
+        "Python generator", lambda: gen.generate(module, "crypto"), iterations=1000
     )
     print(f"  Python generator (4 functions):")
     print(f"    Total: {total:.2f}ms (1000 runs)")
@@ -206,11 +196,7 @@ val process_list : int list -> string list
         PythonGenerator().generate(module, "crypto")
         DuneGenerator().generate_dune("crypto")
 
-    total, avg = time_function(
-        "Full workflow",
-        full_workflow,
-        iterations=100
-    )
+    total, avg = time_function("Full workflow", full_workflow, iterations=100)
     print(f"  Complete workflow (parse + 6 generators):")
     print(f"    Total: {total:.2f}ms (100 runs)")
     print(f"    Average: {avg:.2f}ms per complete generation")

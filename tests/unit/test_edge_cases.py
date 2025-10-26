@@ -35,7 +35,12 @@ class TestCtypesGeneratorEdgeCases:
             functions=[
                 IRFunction(
                     name="process_optional",
-                    params=[IRParameter(name="opt", type=IRType(kind=TypeKind.OPTION, name="option", params=[STRING]))],
+                    params=[
+                        IRParameter(
+                            name="opt",
+                            type=IRType(kind=TypeKind.OPTION, name="option", params=[STRING]),
+                        )
+                    ],
                     return_type=STRING,
                 )
             ],
@@ -56,7 +61,11 @@ class TestCtypesGeneratorEdgeCases:
             functions=[
                 IRFunction(
                     name="process_list",
-                    params=[IRParameter(name="items", type=IRType(kind=TypeKind.LIST, name="list", params=[INT]))],
+                    params=[
+                        IRParameter(
+                            name="items", type=IRType(kind=TypeKind.LIST, name="list", params=[INT])
+                        )
+                    ],
                     return_type=STRING,
                 )
             ],
@@ -77,7 +86,12 @@ class TestCtypesGeneratorEdgeCases:
             functions=[
                 IRFunction(
                     name="process_tuple",
-                    params=[IRParameter(name="pair", type=IRType(kind=TypeKind.TUPLE, name="tuple", params=[INT, STRING]))],
+                    params=[
+                        IRParameter(
+                            name="pair",
+                            type=IRType(kind=TypeKind.TUPLE, name="tuple", params=[INT, STRING]),
+                        )
+                    ],
                     return_type=STRING,
                 )
             ],
@@ -98,7 +112,9 @@ class TestCtypesGeneratorEdgeCases:
             functions=[
                 IRFunction(
                     name="process_custom",
-                    params=[IRParameter(name="data", type=IRType(kind=TypeKind.CUSTOM, name="custom_t"))],
+                    params=[
+                        IRParameter(name="data", type=IRType(kind=TypeKind.CUSTOM, name="custom_t"))
+                    ],
                     return_type=STRING,
                 )
             ],
@@ -119,7 +135,9 @@ class TestCtypesGeneratorEdgeCases:
             functions=[
                 IRFunction(
                     name="process_record",
-                    params=[IRParameter(name="person", type=IRType(kind=TypeKind.RECORD, name="person"))],
+                    params=[
+                        IRParameter(name="person", type=IRType(kind=TypeKind.RECORD, name="person"))
+                    ],
                     return_type=STRING,
                 )
             ],
@@ -140,7 +158,11 @@ class TestCtypesGeneratorEdgeCases:
             functions=[
                 IRFunction(
                     name="process_variant",
-                    params=[IRParameter(name="result", type=IRType(kind=TypeKind.VARIANT, name="result"))],
+                    params=[
+                        IRParameter(
+                            name="result", type=IRType(kind=TypeKind.VARIANT, name="result")
+                        )
+                    ],
                     return_type=STRING,
                 )
             ],
@@ -161,7 +183,11 @@ class TestCtypesGeneratorEdgeCases:
             functions=[
                 IRFunction(
                     name="process_unknown",
-                    params=[IRParameter(name="data", type=IRType(kind=TypeKind.PRIMITIVE, name="unknown"))],
+                    params=[
+                        IRParameter(
+                            name="data", type=IRType(kind=TypeKind.PRIMITIVE, name="unknown")
+                        )
+                    ],
                     return_type=STRING,
                 )
             ],
@@ -182,7 +208,11 @@ class TestCtypesGeneratorEdgeCases:
             functions=[
                 IRFunction(
                     name="process_empty_option",
-                    params=[IRParameter(name="opt", type=IRType(kind=TypeKind.OPTION, name="option", params=[]))],
+                    params=[
+                        IRParameter(
+                            name="opt", type=IRType(kind=TypeKind.OPTION, name="option", params=[])
+                        )
+                    ],
                     return_type=STRING,
                 )
             ],
@@ -203,7 +233,9 @@ class TestCtypesGeneratorEdgeCases:
             functions=[
                 IRFunction(
                     name="process_function",
-                    params=[IRParameter(name="fn", type=IRType(kind=TypeKind.FUNCTION, name="function"))],
+                    params=[
+                        IRParameter(name="fn", type=IRType(kind=TypeKind.FUNCTION, name="function"))
+                    ],
                     return_type=STRING,
                 )
             ],
