@@ -8,7 +8,7 @@ version = "0.4.0"
 description = "Automatic FFI bindings generator for polyglot projects"
 readme = "README.md"
 requires-python = ">=3.8"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
     {name = "Chizaram Chibueze", email = "chizy@chizyhub.com"}
 ]
