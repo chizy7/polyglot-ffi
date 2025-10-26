@@ -121,7 +121,7 @@ val hash : string -> int
         assert module.functions[2].name == "hash"
 
     def test_unsupported_type_error(self):
-        """Test that unsupported types are now handled as CUSTOM types in Phase 2."""
+        """Test that unsupported types are now handled as CUSTOM types."""
         content = """
 val process : custom_type -> string
 """

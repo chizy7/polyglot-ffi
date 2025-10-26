@@ -14,7 +14,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.3.0")
+@click.version_option(version="0.4.0", prog_name="polyglot-ffi")
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool) -> None:
@@ -95,6 +95,7 @@ def init(
     except Exception as e:
         # Check if it's a polyglot-ffi error with rich formatting
         from polyglot_ffi.utils.errors import PolyglotFFIError
+
         if isinstance(e, PolyglotFFIError):
             console.print(e.format_rich())
         else:
@@ -201,6 +202,7 @@ def generate(
     except Exception as e:
         # Check if it's a polyglot-ffi error with rich formatting
         from polyglot_ffi.utils.errors import PolyglotFFIError
+
         if isinstance(e, PolyglotFFIError):
             console.print(e.format_rich())
         else:
@@ -236,6 +238,7 @@ def watch(ctx: click.Context, paths: tuple, build: bool) -> None:
         )
     except Exception as e:
         from polyglot_ffi.utils.errors import PolyglotFFIError
+
         if isinstance(e, PolyglotFFIError):
             console.print(e.format_rich())
         else:
@@ -272,6 +275,7 @@ def check(ctx: click.Context, check_deps: bool, lang: Optional[str]) -> None:
 
     except Exception as e:
         from polyglot_ffi.utils.errors import PolyglotFFIError
+
         if isinstance(e, PolyglotFFIError):
             console.print(e.format_rich())
         else:
@@ -302,6 +306,7 @@ def clean(ctx: click.Context, all: bool, dry_run: bool) -> None:
         clean_project(all_files=all, dry_run=dry_run)
     except Exception as e:
         from polyglot_ffi.utils.errors import PolyglotFFIError
+
         if isinstance(e, PolyglotFFIError):
             console.print(e.format_rich())
         else:

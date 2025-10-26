@@ -1,6 +1,24 @@
 # Type Mapping Reference
 
+**Version:** v0.4.0
+
 Complete guide to type mappings across languages in Polyglot FFI.
+
+## Implementation Status
+
+| Type Category | Status | Notes |
+|---------------|--------|-------|
+| **Primitives** | Fully Supported | `string`, `int`, `float`, `bool`, `unit` |
+| **Option Types** | Fully Supported | `'a option` → `Optional[T]`, `Option<T>` |
+| **List Types** | Fully Supported | `'a list` → `List[T]`, `Vec<T>` |
+| **Tuple Types** | Fully Supported | `'a * 'b` → `Tuple[T1, T2]`, `(T1, T2)` |
+| **Record Types** | Partial Support | Parsed, basic generation implemented |
+| **Variant Types** | Partial Support | Parsed, basic generation implemented |
+| **Type Variables** | Supported | Generic/polymorphic types |
+
+**Legend:**
+- Fully Supported - Production ready, tested, documented
+- Partial Support - Basic functionality works, advanced features in progress
 
 ## Primitive Types 
 

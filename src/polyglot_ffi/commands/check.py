@@ -99,9 +99,7 @@ def check_project(check_deps: bool = False, lang: Optional[str] = None) -> Dict[
         # Add warnings for missing dependencies
         missing_deps = [dep for dep, available in deps.items() if not available]
         if missing_deps:
-            results["warnings"].append(
-                f"Missing dependencies: {', '.join(missing_deps)}"
-            )
+            results["warnings"].append(f"Missing dependencies: {', '.join(missing_deps)}")
 
     return results
 
@@ -119,8 +117,12 @@ def display_check_results(results: Dict[str, Any]) -> None:
 
         config = results.get("config")
         if config:
-            console.print(f"\n[bold]Project:[/bold] {config.project.name} v{config.project.version}")
-            console.print(f"[bold]Source:[/bold] {config.source.language} ({len(config.source.files)} file(s))")
+            console.print(
+                f"\n[bold]Project:[/bold] {config.project.name} v{config.project.version}"
+            )
+            console.print(
+                f"[bold]Source:[/bold] {config.source.language} ({len(config.source.files)} file(s))"
+            )
 
             # Targets table
             if config.targets:

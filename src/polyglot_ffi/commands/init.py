@@ -32,7 +32,7 @@ def init_project(
 
     # Create polyglot.toml
     config_content = generate_config(name, target_langs)
-    (project_path / "polyglot.toml").write_text(config_content)
+    (project_path / "polyglot.toml").write_text(config_content, encoding="utf-8")
 
     # Create example .mli file
     example_mli = f"""(* {name}.mli - Example OCaml interface *)
@@ -43,15 +43,15 @@ val greet : string -> string
 val add : int -> int -> int
 (** Add two integers *)
 """
-    (project_path / "src" / f"{name}.mli").write_text(example_mli)
+    (project_path / "src" / f"{name}.mli").write_text(example_mli, encoding="utf-8")
 
     # Create example .ml implementation
     example_ml = f"""(* {name}.ml - Example implementation *)
 
-let greet name = 
+let greet name =
   "Hello, " ^ name ^ "!"
 
-let add x y = 
+let add x y =
   x + y
 
 (* Register functions for C callbacks *)
@@ -59,15 +59,15 @@ let () =
   Callback.register "greet" greet;
   Callback.register "add" add
 """
-    (project_path / "src" / f"{name}.ml").write_text(example_ml)
+    (project_path / "src" / f"{name}.ml").write_text(example_ml, encoding="utf-8")
 
     # Create README
     readme_content = generate_readme(name, target_langs)
-    (project_path / "README.md").write_text(readme_content)
+    (project_path / "README.md").write_text(readme_content, encoding="utf-8")
 
     # Create Makefile
     makefile_content = generate_makefile(name)
-    (project_path / "Makefile").write_text(makefile_content)
+    (project_path / "Makefile").write_text(makefile_content, encoding="utf-8")
 
     # Create .gitignore
     gitignore_content = """# Python
@@ -109,7 +109,7 @@ generated/
 # OS
 .DS_Store
 """
-    (project_path / ".gitignore").write_text(gitignore_content)
+    (project_path / ".gitignore").write_text(gitignore_content, encoding="utf-8")
 
     return {
         "success": True,
@@ -127,32 +127,27 @@ generated/
 
 def generate_config(name: str, target_langs: List[str]) -> str:
     """Generate polyglot.toml configuration file."""
-    langs_str = ", ".join(f'"{lang}"' for lang in target_langs)
+    # Generate [[targets]] array entries
+    targets_str = "\n".join(
+        f'[[targets]]\nlanguage = "{lang}"\noutput_dir = "generated/{lang}"\nenabled = true\n'
+        for lang in target_langs
+    )
 
     return f"""# Polyglot FFI Configuration
 
 [project]
 name = "{name}"
 version = "0.1.0"
-source_lang = "ocaml"
+description = "FFI bindings for {name}"
 
-[languages.ocaml]
-source_dir = "src"
-build_system = "dune"
+[source]
+language = "ocaml"
+dir = "src"
+files = ["{name}.mli"]
 
-[languages.python]
-target_dir = "generated"
-min_version = "3.8"
-
-[bindings]
-auto_discover = true
-interfaces = [
-    "src/{name}.mli"
-]
-
-[generate]
-watch = false
-verbose = false
+{targets_str}
+[build]
+auto_build = false
 """
 
 

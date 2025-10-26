@@ -191,8 +191,14 @@ class CStubGenerator:
             return self.C_TYPE_MAP.get(ir_type.name, "char*")
 
         # Complex types are opaque pointers in C
-        if ir_type.kind in (TypeKind.OPTION, TypeKind.LIST, TypeKind.TUPLE,
-                            TypeKind.CUSTOM, TypeKind.RECORD, TypeKind.VARIANT):
+        if ir_type.kind in (
+            TypeKind.OPTION,
+            TypeKind.LIST,
+            TypeKind.TUPLE,
+            TypeKind.CUSTOM,
+            TypeKind.RECORD,
+            TypeKind.VARIANT,
+        ):
             return "void*"
 
         raise ValueError(f"Unsupported type for C generation: {ir_type}")

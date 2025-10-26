@@ -24,14 +24,28 @@ console = Console()
 
 
 class SourceFileHandler(FileSystemEventHandler):
-    """Handler for source file changes."""
+    """Handler for source file changes.
 
-    def __init__(self, watched_files: Set[Path], on_change_callback):
+    Accepts an optional debounce_seconds to control the debounce interval (default 0.5s)
+    and an optional time_provider callable (defaults to time.time) to make testing
+    deterministic without relying on wall-clock sleeps.
+    """
+
+    def __init__(
+        self,
+        watched_files: Set[Path],
+        on_change_callback,
+        debounce_seconds: float = 0.5,
+        time_provider=None,
+    ):
         super().__init__()
         self.watched_files = {f.resolve() for f in watched_files}
         self.on_change_callback = on_change_callback
         self.last_modified = {}
-        self.debounce_seconds = 0.5
+        self.debounce_seconds = debounce_seconds
+        # time_provider is a callable that returns current time in seconds.
+        # Default to time.time for production; tests can inject a fake provider.
+        self._time_provider = time_provider or time.time
 
     def on_modified(self, event: FileSystemEvent) -> None:
         """Handle file modification events."""
@@ -45,7 +59,7 @@ class SourceFileHandler(FileSystemEventHandler):
             return
 
         # Debounce: ignore if modified very recently
-        current_time = time.time()
+        current_time = self._time_provider()
         last_time = self.last_modified.get(file_path, 0)
 
         if current_time - last_time < self.debounce_seconds:

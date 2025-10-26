@@ -44,14 +44,18 @@ Thumbs.db
 # Generated files and directories
 generated/
 bindings/
+site/
 /PLANNING.md
-/SETUP_GUIDE.md
+/RELEASE_GUIDE.md
 
 # Logs
 *.log
 
 # Test coverage
 .coverage
+.coverage.*
+coverage.json
+coverage.xml
 htmlcov/
 .pytest_cache/
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "polyglot-ffi"
-version = "0.3.0"
+version = "0.4.0"
 description = "Automatic FFI bindings generator for polyglot projects"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -16,7 +16,6 @@ keywords = ["ffi", "bindings", "ocaml", "python", "rust", "ctypes", "polyglot"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -50,9 +49,10 @@ polyglot-ffi = "polyglot_ffi.cli.main:cli"
 
 [project.urls]
 Homepage = "https://github.com/chizy7/polyglot-ffi"
-Documentation = "https://polyglot-ffi.readthedocs.io"
+Documentation = "https://chizy7.github.io/polyglot-ffi/"
 Repository = "https://github.com/chizy7/polyglot-ffi"
 Issues = "https://github.com/chizy7/polyglot-ffi/issues"
+Changelog = "https://github.com/chizy7/polyglot-ffi/blob/master/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -67,6 +67,24 @@ addopts = [
     "--cov=polyglot_ffi",
     "--cov-report=term-missing",
     "--cov-report=html",
+]
+
+[tool.coverage.run]
+omit = [
+    "src/polyglot_ffi/__main__.py",
+    "src/polyglot_ffi/cli/__init__.py",
+    "src/polyglot_ffi/cli/main.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
 ]
 
 [tool.black]

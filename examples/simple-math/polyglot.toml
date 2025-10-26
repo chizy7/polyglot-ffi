@@ -1,0 +1,11 @@
+[project]
+name = "math"
+version = "0.1.0"
+description = "Simple math library bindings"
+
+[bindings]
+source_files = ["src/math.mli"]
+output_dir = "generated"
+
+[targets.python]
+enabled = true

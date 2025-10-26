@@ -53,6 +53,12 @@ class OCamlParser:
         "unit": UNIT,
     }
 
+    # Pre-compiled regex patterns for performance
+    OPTION_PATTERN = re.compile(r"(.+?)\s+option$")
+    LIST_PATTERN = re.compile(r"(.+?)\s+list$")
+    TYPE_VAR_PATTERN = re.compile(r"^'[a-z]$")
+    CUSTOM_TYPE_PATTERN = re.compile(r"^[a-z_][a-z0-9_]*$")
+
     def __init__(self, content: str, filename: str = "<unknown>"):
         self.content = content
         self.filename = filename
@@ -166,9 +172,7 @@ class OCamlParser:
         except ParseError as e:
             raise ParseError(f"Error parsing type definition: {e}", start_line)
 
-    def _parse_record_type(
-        self, type_name: str, type_body: str, line_num: int
-    ) -> IRTypeDefinition:
+    def _parse_record_type(self, type_name: str, type_body: str, line_num: int) -> IRTypeDefinition:
         """
         Parse a record type definition.
 
@@ -194,9 +198,7 @@ class OCamlParser:
             field_type = self._parse_type(field_type_str, line_num)
             fields[field_name] = field_type
 
-        return IRTypeDefinition(
-            name=type_name, kind=TypeKind.RECORD, fields=fields, doc=""
-        )
+        return IRTypeDefinition(name=type_name, kind=TypeKind.RECORD, fields=fields, doc="")
 
     def _parse_variant_type(
         self, type_name: str, type_body: str, line_num: int
@@ -230,9 +232,7 @@ class OCamlParser:
                 # Constructor without payload
                 variants[constructor] = None
 
-        return IRTypeDefinition(
-            name=type_name, kind=TypeKind.VARIANT, variants=variants, doc=""
-        )
+        return IRTypeDefinition(name=type_name, kind=TypeKind.VARIANT, variants=variants, doc="")
 
     def _parse_function(
         self, lines: List[str], start_line: int
@@ -341,14 +341,14 @@ class OCamlParser:
             return self.PRIMITIVE_TYPES[type_str]
 
         # Check for option types: "X option"
-        option_match = re.match(r"(.+?)\s+option$", type_str)
+        option_match = self.OPTION_PATTERN.match(type_str)
         if option_match:
             inner_type_str = option_match.group(1).strip()
             inner_type = self._parse_type(inner_type_str, line_num)
             return ir_option(inner_type)
 
         # Check for list types: "X list"
-        list_match = re.match(r"(.+?)\s+list$", type_str)
+        list_match = self.LIST_PATTERN.match(type_str)
         if list_match:
             inner_type_str = list_match.group(1).strip()
             inner_type = self._parse_type(inner_type_str, line_num)
@@ -365,17 +365,18 @@ class OCamlParser:
             tuple_types = [self._parse_type(part, line_num) for part in parts]
 
             from polyglot_ffi.ir.types import ir_tuple
+
             return ir_tuple(*tuple_types)
 
         # Check for type variables: 'a, 'b, etc.
-        if re.match(r"^'[a-z]$", type_str):
+        if self.TYPE_VAR_PATTERN.match(type_str):
             # Type variables represent generic/polymorphic types
             # For now, treat them as a special primitive
             return ir_primitive(type_str)
 
         # Check for custom named types (records, variants, or type aliases)
         # These are identifiers that don't match primitives
-        if re.match(r"^[a-z_][a-z0-9_]*$", type_str):
+        if self.CUSTOM_TYPE_PATTERN.match(type_str):
             # This is a custom type reference
             # We'll create it as a CUSTOM type kind
             return IRType(kind=TypeKind.CUSTOM, name=type_str)

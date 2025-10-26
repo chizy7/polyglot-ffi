@@ -1,0 +1,109 @@
+site_name: Polyglot FFI Documentation
+site_description: Automatic FFI bindings generator for polyglot projects
+site_author: Polyglot FFI Contributors
+site_url: https://chizy7.github.io/polyglot-ffi/
+
+repo_name: chizy7/polyglot-ffi
+repo_url: https://github.com/chizy7/polyglot-ffi
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotate
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: true
+            show_root_heading: true
+            show_category_heading: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - toc:
+      permalink: true
+  - tables
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Quick Start: quickstart.md
+      - Installation: installation.md
+      - Configuration: configuration.md
+      - Quick Reference: quick_reference.md
+  - API Reference:
+      - Overview: api/index.md
+      - Parser API: api/parser.md
+      - Generator API: api/generators.md
+      - Type System: api/type-system.md
+      - IR Types: api/ir-types.md
+      - Configuration: api/config.md
+  - Guides:
+      - Architecture: architecture.md
+      - Type Mapping: type-mapping.md
+      - Contributing: contributing.md
+      - Building Docs: DOCUMENTATION.md
+  - About:
+      - FAQ: faq.md
+      - Roadmap: ROADMAP.md
+      - Changelog: CHANGELOG.md
+      - Security: SECURITY.md
+      - Code of Conduct: CODE_OF_CONDUCT.md
+      - License: LICENSE.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/chizy7/polyglot-ffi
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/polyglot-ffi/
+  version:
+    provider: mike
+
+copyright: Copyright &copy; 2025 Polyglot FFI Contributors

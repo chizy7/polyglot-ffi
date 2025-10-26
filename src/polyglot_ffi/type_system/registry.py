@@ -5,12 +5,14 @@ The registry allows defining how types in the IR map to types
 in different target languages.
 """
 
+from functools import lru_cache
 from typing import Dict, Optional, Callable
 from polyglot_ffi.ir.types import IRType, TypeKind
 
 
 class TypeMappingError(Exception):
     """Raised when a type mapping cannot be found or is invalid."""
+
     pass
 
 
@@ -32,6 +34,8 @@ class TypeRegistry:
     def __init__(self):
         self._primitive_mappings: Dict[str, Dict[str, str]] = {}
         self._custom_converters: Dict[str, Dict[str, Callable]] = {}
+        # Cache for type mappings (cleared when registry is modified)
+        self._mapping_cache: Dict[tuple, str] = {}
 
     def register_primitive(self, ir_type_name: str, mappings: Dict[str, str]) -> None:
         """
@@ -42,12 +46,10 @@ class TypeRegistry:
             mappings: Dictionary of language -> type_name mappings
         """
         self._primitive_mappings[ir_type_name] = mappings
+        self._mapping_cache.clear()  # Clear cache when registry is modified
 
     def register_converter(
-        self,
-        ir_type_name: str,
-        target_lang: str,
-        converter: Callable[[IRType], str]
+        self, ir_type_name: str, target_lang: str, converter: Callable[[IRType], str]
     ) -> None:
         """
         Register a custom type converter function.
@@ -60,6 +62,14 @@ class TypeRegistry:
         if ir_type_name not in self._custom_converters:
             self._custom_converters[ir_type_name] = {}
         self._custom_converters[ir_type_name][target_lang] = converter
+        self._mapping_cache.clear()  # Clear cache when registry is modified
+
+    def _type_to_cache_key(self, ir_type: IRType) -> tuple:
+        """Convert IRType to a hashable cache key."""
+        params_key = (
+            tuple(self._type_to_cache_key(p) for p in ir_type.params) if ir_type.params else ()
+        )
+        return (ir_type.kind.value, ir_type.name, params_key)
 
     def get_mapping(self, ir_type: IRType, target_lang: str) -> str:
         """
@@ -68,6 +78,32 @@ class TypeRegistry:
         Args:
             ir_type: The IR type to map
             target_lang: Target language (e.g., "python", "c", "rust")
+
+        Returns:
+            Type string in the target language
+
+        Raises:
+            TypeMappingError: If no mapping exists
+        """
+        # Check cache first
+        cache_key = (self._type_to_cache_key(ir_type), target_lang)
+        if cache_key in self._mapping_cache:
+            return self._mapping_cache[cache_key]
+
+        # Compute the mapping
+        result = self._compute_mapping(ir_type, target_lang)
+
+        # Store in cache
+        self._mapping_cache[cache_key] = result
+        return result
+
+    def _compute_mapping(self, ir_type: IRType, target_lang: str) -> str:
+        """
+        Compute the type mapping for a target language (internal, uncached).
+
+        Args:
+            ir_type: The IR type to map
+            target_lang: Target language
 
         Returns:
             Type string in the target language
@@ -202,5 +238,6 @@ def get_default_registry() -> TypeRegistry:
         _default_registry = TypeRegistry()
         # Register built-in types
         from polyglot_ffi.type_system.builtin import register_builtin_types
+
         register_builtin_types(_default_registry)
     return _default_registry

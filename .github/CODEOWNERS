@@ -1,0 +1,48 @@
+# Code Owners for Polyglot FFI
+#
+# These owners will be automatically requested for review when someone opens a pull request
+# that modifies code in these areas.
+#
+# Learn more: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+* @chizy7
+
+# Core source code
+/src/polyglot_ffi/ @chizy7
+
+# Parser module (critical)
+/src/polyglot_ffi/parsers/ @chizy7
+
+# Code generators (critical)
+/src/polyglot_ffi/generators/ @chizy7
+
+# Type system
+/src/polyglot_ffi/type_system/ @chizy7
+
+# CLI
+/src/polyglot_ffi/cli/ @chizy7
+
+# Tests
+/tests/ @chizy7
+
+# Documentation
+/docs/ @chizy7
+*.md @chizy7
+
+# Configuration files
+/pyproject.toml @chizy7
+/mkdocs.yml @chizy7
+
+# CI/CD workflows
+/.github/workflows/ @chizy7
+
+# Security-related files
+/SECURITY.md @chizy7
+/.github/ISSUE_TEMPLATE/ @chizy7
+
+# Examples (can be reviewed by broader team when I add more maintainers)
+/examples/ @chizy7
+
+# Scripts
+/scripts/ @chizy7

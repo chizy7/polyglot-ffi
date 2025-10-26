@@ -101,7 +101,7 @@ polyglot-ffi generate encryption.mli
 - Configuration file support
 - Build system integration
 
-**Phase 4+:**
+**Future Features (v1.0+):**
 - Rust target support
 - Go target support
 - Bidirectional bindings
@@ -185,13 +185,15 @@ Proper memory management:
 - String ownership handled
 - GC-safe conversions
 
-### Production Ready
+### Release Highlights (v0.4.0)
 
-- Comprehensive test suite (70%+ coverage)
-- Rich error messages
+- **Comprehensive test suite (75% coverage, 262 tests)**
+- **Shell completions (Bash, Zsh, Fish)**
+- Rich error messages with suggestions
 - CLI with progress indicators
-- Dry run mode
-- Force regeneration
+- Dry run mode and force regeneration
+- Watch mode for auto-regeneration
+- Configuration validation
 
 ## Architecture Overview
 
@@ -229,7 +231,7 @@ flowchart TD
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) file for details.
+MIT License - See [LICENSE](LICENSE.md) file for details.
 
 ## Next Steps
 
@@ -239,7 +241,5 @@ MIT License - See [LICENSE](LICENSE) file for details.
 4. **Configuration**: See [Configuration](configuration.md) guide
 
 ---
-
-**Made with ❤️ for polyglot developers**
 
 Stop writing FFI boilerplate. Start building amazing things.
