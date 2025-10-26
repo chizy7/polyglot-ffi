@@ -6,6 +6,7 @@
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org)
 [![Build](https://github.com/chizy7/polyglot-ffi/actions/workflows/ci.yml/badge.svg)](https://github.com/chizy7/polyglot-ffi/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/chizy7/polyglot-ffi/branch/master/graph/badge.svg)](https://codecov.io/gh/chizy7/polyglot-ffi)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://chizy7.github.io/polyglot-ffi/)
 
 Stop writing FFI boilerplate. Start building amazing things.
 
