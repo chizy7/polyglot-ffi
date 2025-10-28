@@ -24,7 +24,7 @@ Polyglot FFI is an automatic Foreign Function Interface (FFI) bindings generator
 
 ### Is it production-ready?
 
-Yes! Version 0.4.0 is production-ready with:
+Yes! Version 0.4.1 is production-ready with:
 - 262 comprehensive tests (0 failures)
 - 75% code coverage
 - Full CI/CD pipeline
@@ -388,7 +388,7 @@ Test both sides of the FFI boundary:
 
 ### Resources
 
-- **Documentation:** https://chizy7.github.io/polyglot-ffi/
+- **Documentation:** https://polyglotffi.com/
 - **GitHub:** https://github.com/chizy7/polyglot-ffi
 - **Issues:** https://github.com/chizy7/polyglot-ffi/issues
 - **Discussions:** https://github.com/chizy7/polyglot-ffi/discussions

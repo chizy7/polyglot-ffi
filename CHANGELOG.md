@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.4.1] - 2025-10-28
+
+### Changed
+- Updated documentation URL from `https://chizy7.github.io/polyglot-ffi/` to `https://polyglotffi.com/` across all files
+
+### Fixed
+- Typo in ROADMAP.md ("Ocotber" → "October")
+
 ## [0.4.0] - 2025-10-25
 
 ### Added
@@ -172,11 +180,12 @@ Security vulnerability fixes
 ## Links
 
 - [PyPI](https://pypi.org/project/polyglot-ffi/)
-- [Documentation](https://chizy7.github.io/polyglot-ffi/)
+- [Documentation](https://polyglotffi.com/)
 - [GitHub Repository](https://github.com/chizy7/polyglot-ffi)
 - [Issue Tracker](https://github.com/chizy7/polyglot-ffi/issues)
 
 ---
 
-[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/chizy7/polyglot-ffi/releases/tag/v0.4.1
 [0.4.0]: https://github.com/chizy7/polyglot-ffi/releases/tag/v0.4.0

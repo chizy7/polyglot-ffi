@@ -11,9 +11,9 @@ body:
         Have a question? We're here to help!
 
         **Before asking:**
-        - Check the [FAQ](https://chizy7.github.io/polyglot-ffi/faq/)
+        - Check the [FAQ](https://polyglotffi.com/faq/)
         - Search [existing issues](https://github.com/chizy7/polyglot-ffi/issues)
-        - Read the [documentation](https://chizy7.github.io/polyglot-ffi/)
+        - Read the [documentation](https://polyglotffi.com/)
 
   - type: textarea
     id: question

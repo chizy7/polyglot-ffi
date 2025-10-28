@@ -31,7 +31,7 @@ body:
     attributes:
       label: Page URL or File
       description: Which page or file has the issue?
-      placeholder: "https://chizy7.github.io/polyglot-ffi/installation/ or docs/installation.md"
+      placeholder: "https://polyglotffi.com/installation/ or docs/installation.md"
     validations:
       required: true
 
