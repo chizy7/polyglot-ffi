@@ -153,7 +153,7 @@ Polyglot FFI aims to eliminate FFI boilerplate by automatically generating type-
 **Success Metrics:**
 
 - Package available on PyPI
-- Documentation live at https://polyglotffi.com/
+- Documentation live at [polyglotffi.com](https://polyglotffi.com/)
 - Can install with `pip install polyglot-ffi`
 
 ---
