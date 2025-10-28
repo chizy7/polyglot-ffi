@@ -10,6 +10,8 @@
 
 Stop writing FFI boilerplate. Start building amazing things.
 
+**[Full Documentation](https://chizy7.github.io/polyglot-ffi/)** | [Quickstart](https://chizy7.github.io/polyglot-ffi/quickstart/) | [API Reference](https://chizy7.github.io/polyglot-ffi/api/) | [Type Mapping](https://chizy7.github.io/polyglot-ffi/type-mapping/)
+
 ## What is Polyglot FFI?
 
 Polyglot FFI automatically generates complete Foreign Function Interface (FFI) bindings between programming languages. Write your OCaml interface once, and get type-safe, memory-safe bindings for Python (and soon Rust, Go, etc.) instantly.
