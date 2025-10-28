@@ -138,7 +138,7 @@ This installs in "editable" mode with development dependencies.
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.4.0
+# Output: polyglot-ffi, version 0.4.1
 ```
 
 ### Check Help
@@ -380,6 +380,6 @@ After installation:
 
 ## Getting Help
 
-- **Documentation:** https://chizy7.github.io/polyglot-ffi/
+- **Documentation:** https://polyglotffi.com/
 - **Issues:** https://github.com/chizy7/polyglot-ffi/issues
 - **Discussions:** https://github.com/chizy7/polyglot-ffi/discussions

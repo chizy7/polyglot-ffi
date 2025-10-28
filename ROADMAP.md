@@ -145,15 +145,15 @@ Polyglot FFI aims to eliminate FFI boilerplate by automatically generating type-
 - [x] Final testing and verification
 - [x] Documentation review and polish
 - [x] Package building and validation
-- [ ] **Create v0.4.0 release tag**
-- [ ] **Publish to PyPI**
-- [ ] Deploy documentation
-- [ ] Announce release
+- [x] **Create v0.4.0 release tag**
+- [x] **Publish to PyPI**
+- [x] Deploy documentation
+- [x] Announce release
 
 **Success Metrics:**
 
 - Package available on PyPI
-- Documentation live at https://chizy7.github.io/polyglot-ffi/
+- Documentation live at https://polyglotffi.com/
 - Can install with `pip install polyglot-ffi`
 
 ---
@@ -161,7 +161,7 @@ Polyglot FFI aims to eliminate FFI boilerplate by automatically generating type-
 ## Planned Milestones
 
 ### v0.5.0 - Record & Variant Support (Q4 2025)
-**Target:** Ocotber-December 2025
+**Target:** October-December 2025
 
 **Advanced Type Generation:**
 

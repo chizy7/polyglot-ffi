@@ -6,11 +6,11 @@
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org)
 [![Build](https://github.com/chizy7/polyglot-ffi/actions/workflows/ci.yml/badge.svg)](https://github.com/chizy7/polyglot-ffi/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/chizy7/polyglot-ffi/branch/master/graph/badge.svg)](https://codecov.io/gh/chizy7/polyglot-ffi)
-[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://chizy7.github.io/polyglot-ffi/)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://polyglotffi.com/)
 
 Stop writing FFI boilerplate. Start building amazing things.
 
-**[Full Documentation](https://chizy7.github.io/polyglot-ffi/)** | [Quickstart](https://chizy7.github.io/polyglot-ffi/quickstart/) | [API Reference](https://chizy7.github.io/polyglot-ffi/api/) | [Type Mapping](https://chizy7.github.io/polyglot-ffi/type-mapping/)
+**[Full Documentation](https://polyglotffi.com/)** | [Quickstart](https://polyglotffi.com/quickstart/) | [API Reference](https://polyglotffi.com/api/) | [Type Mapping](https://polyglotffi.com/type-mapping/)
 
 ## What is Polyglot FFI?
 
@@ -139,7 +139,7 @@ polyglot-ffi clean                        # Remove generated files
 polyglot-ffi --help                       # Get help
 ```
 
-Run any command with `--help` for full options. See the [CLI documentation](https://chizy7.github.io/polyglot-ffi/) for detailed usage.
+Run any command with `--help` for full options. See the [CLI documentation](https://polyglotffi.com/) for detailed usage.
 
 ## Documentation
 

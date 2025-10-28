@@ -10,7 +10,7 @@ Our documentation is built with:
 - **mkdocstrings** - Auto-generate API docs from Python docstrings
 - **GitHub Pages** - Hosting platform
 
-**Live Documentation:** https://chizy7.github.io/polyglot-ffi/
+**Live Documentation:** https://polyglotffi.com/
 
 ---
 
@@ -179,7 +179,7 @@ Main configuration file:
 
 ```yaml
 site_name: Polyglot FFI Documentation
-site_url: https://chizy7.github.io/polyglot-ffi/
+site_url: https://polyglotffi.com/
 repo_url: https://github.com/chizy7/polyglot-ffi
 
 theme:
@@ -375,7 +375,7 @@ Documentation is **automatically deployed** when you push to `master`:
 - Published to GitHub Pages!
 ```
 
-**URL:** https://chizy7.github.io/polyglot-ffi/
+**URL:** https://polyglotffi.com/
 
 ### Manual Deployment
 

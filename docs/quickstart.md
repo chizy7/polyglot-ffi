@@ -22,7 +22,7 @@ pip install -e ".[dev]"
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.4.0
+# Output: polyglot-ffi, version 0.4.1
 ```
 
 ## Your First Project
@@ -377,7 +377,7 @@ polyglot-ffi clean --help
 
 ### Resources
 
-- **Documentation**: https://chizy7.github.io/polyglot-ffi/
+- **Documentation**: https://polyglotffi.com/
 - **Quick Reference**: [quick_reference.md](quick_reference.md)
 - **Type Mapping**: [type-mapping.md](type-mapping.md)
 - **Architecture**: [architecture.md](architecture.md)
@@ -400,4 +400,4 @@ See [Installation Guide](installation.md#upgrading) for more options.
 
 **Ready to eliminate FFI boilerplate?** Let's build something amazing!
 
-**Version:** 0.4.0 | **Documentation:** https://chizy7.github.io/polyglot-ffi/
+**Version:** 0.4.1 | **Documentation:** https://polyglotffi.com/

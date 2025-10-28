@@ -200,4 +200,4 @@ jobs:
       run: |
         echo "Release ${{ github.ref_name }} published successfully!"
         echo "PyPI: https://pypi.org/project/polyglot-ffi/"
-        echo "Docs: https://chizy7.github.io/polyglot-ffi/"
+        echo "Docs: https://polyglotffi.com/"
