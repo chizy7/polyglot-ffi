@@ -10,8 +10,6 @@
 
 Stop writing FFI boilerplate. Start building amazing things.
 
----
-
 ## What is Polyglot FFI?
 
 Polyglot FFI automatically generates complete Foreign Function Interface (FFI) bindings between programming languages. Write your OCaml interface once, and get type-safe, memory-safe bindings for Python (and soon Rust, Go, etc.) instantly.
@@ -32,203 +30,24 @@ polyglot-ffi generate crypto.mli
 
 **Done!** All 100+ lines generated automatically.
 
----
-
-## Quick Example
-
-### Primitive Types
-
-**1. Write OCaml interface:**
-
-```ocaml
-(* crypto.mli *)
-val encrypt : string -> string
-(** Encrypt a string *)
-
-val hash : string -> int
-(** Hash to integer *)
-```
-
-**2. Generate bindings:**
-
-```bash
-polyglot-ffi generate crypto.mli -o generated/ -n crypto
-```
-
-**3. Use from Python:**
-
-```python
-from generated.crypto_py import encrypt, hash
-
-encrypted = encrypt("secret")
-hash_val = hash("data")
-```
-
-### Complex Types
-
-**1. Write OCaml interface with complex types:**
-
-```ocaml
-(* user.mli *)
-type user = {
-  name: string;
-  age: int;
-  email: string option;
-}
-
-type result = Ok of user | Error of string
-
-val find_user : string -> user option
-val create_user : string -> int -> string -> result
-val get_all_users : unit -> user list
-val get_name_and_age : user -> string * int
-```
-
-**2. Generate bindings:**
-
-```bash
-polyglot-ffi generate user.mli
-```
-
-**3. Use from Python with full type hints:**
-
-```python
-from typing import Optional, List, Tuple
-from generated.user_py import find_user, create_user, get_all_users
-
-# Option type → Optional[User]
-user = find_user("john")  # Returns Optional[User]
-
-# Variant type → Result
-result = create_user("Jane", 25, "jane@example.com")
-
-# List type → List[User]
-all_users = get_all_users()  # Returns List[User]
-
-# Tuple type → Tuple[str, int]
-name, age = get_name_and_age(user)  # Returns Tuple[str, int]
-```
-
----
-
-## Installation
-
-### From PyPI
-
-```bash
-pip install polyglot-ffi
-```
-
-### From Source
-
-```bash
-git clone https://github.com/chizy7/polyglot-ffi
-cd polyglot-ffi
-pip install -e ".[dev]"
-```
-
-### Verify
-
-```bash
-polyglot-ffi --version
-# Output: polyglot_ffi, version 0.4.0
-```
-
-### Upgrading
-
-To upgrade to the latest version:
-
-```bash
-pip install --upgrade polyglot-ffi
-```
-
-To upgrade to a specific version:
-
-```bash
-pip install --upgrade polyglot-ffi==0.5.0
-```
-
-See the [full installation guide](docs/installation.md) for detailed instructions including:
-- Virtual environment setup
-- Shell completion
-- Troubleshooting
-- Platform-specific notes
-- **[Complete upgrade guide](docs/installation.md#upgrading)** with all options
-
----
-
-## Features
-
-- **Automatic Code Generation**: One command generates OCaml ctypes, C wrappers, Python modules, and build configs.
-- **Plus Many More Features**: Check docs and roadmap!
-
-### Some Future Features
-
-- [ ] Rust target support
-- [ ] Go target support
-- [ ] Bidirectional bindings
-- [ ] Plugin system
-
----
-
-## Documentation
-
-- **[Quickstart Guide](docs/quickstart.md)** - Get started in 5 minutes
-- **[Architecture](docs/architecture.md)** - How it works
-- **[Type Mapping](docs/type-mapping.md)** - Type system reference
-- **[Contributing](docs/contributing.md)** - Join development
-
----
-
 ## Why Polyglot FFI?
 
-### Zero Boilerplate
+**Zero Boilerplate** - One command generates OCaml ctypes declarations, C wrappers, Python modules, build configs, type conversions, and error handling.
 
-One command generates everything:
-- OCaml ctypes declarations
-- C wrapper functions
-- Python wrapper module
-- Build configuration
-- Type conversions
-- Error handling
+**Type Safe** - Preserves type information with Python type hints, OCaml type constraints, C type declarations, and compile-time checking.
 
-### Type Safe
-
-Preserves type information:
-- Python type hints
-- OCaml type constraints
-- C type declarations
-- Compile-time checking
-
-### Memory Safe
-
-Proper memory management:
-- CAMLparam/CAMLreturn macros
-- No memory leaks
-- String ownership handled
-- GC-safe conversions
-
----
-
-## Use Cases
-
-- **Cryptography**: OCaml for correctness, Python for integration
-- **Data Processing**: OCaml for logic, Python for data science
-- **Financial Systems**: OCaml for algorithms, Python for reporting
-- **ML Infrastructure**: OCaml for pipelines, Python for training
-
----
+**Memory Safe** - Proper memory management with CAMLparam/CAMLreturn macros, no memory leaks, and GC-safe conversions.
 
 ## Quick Start
 
-### Initialize a New Project
+Initialize a new project:
 
 ```bash
 polyglot-ffi init my-crypto-lib
 cd my-crypto-lib
 ```
 
-### Edit Your Interface
+Write your OCaml interface:
 
 ```ocaml
 (* src/my-crypto-lib.mli *)
@@ -236,13 +55,13 @@ val greet : string -> string
 val add : int -> int -> int
 ```
 
-### Generate Bindings
+Generate bindings:
 
 ```bash
 polyglot-ffi generate src/my-crypto-lib.mli
 ```
 
-### Implement OCaml Functions
+Implement your OCaml functions:
 
 ```ocaml
 (* src/my-crypto-lib.ml *)
@@ -254,7 +73,7 @@ let () =
   Callback.register "add" add
 ```
 
-### Use from Python
+Use from Python:
 
 ```python
 from generated.my_crypto_lib_py import greet, add
@@ -263,89 +82,85 @@ print(greet("World"))  # Hello, World!
 print(add(2, 3))       # 5
 ```
 
----
+**Complex types supported**: Records, variants (Result, Option), lists, tuples, and more. See the [Type Mapping docs](docs/type-mapping.md) for details.
 
-## CLI Reference
-
-```bash
-# Initialize project
-polyglot-ffi init my-project
-polyglot-ffi init --interactive              # Interactive setup
-
-# Generate bindings
-polyglot-ffi generate src/module.mli
-polyglot-ffi generate -o bindings/ -n mymodule
-polyglot-ffi generate --dry-run              # Preview only
-polyglot-ffi generate --force                # Force regeneration
-
-# Watch mode (NEW in v0.3!)
-polyglot-ffi watch                           # Watch files from config
-polyglot-ffi watch src/*.mli                 # Watch specific files
-polyglot-ffi watch --build                   # Auto-build after changes
-
-# Validate project (NEW in v0.3!)
-polyglot-ffi check                           # Check configuration
-polyglot-ffi check --check-deps              # Include dependency check
-polyglot-ffi check --lang rust               # Check specific language
-
-# Clean generated files (NEW in v0.3!)
-polyglot-ffi clean                           # Remove generated files
-polyglot-ffi clean --dry-run                 # Preview what would be deleted
-polyglot-ffi clean --all                     # Remove all including directories
-
-# Get help
-polyglot-ffi --help
-```
-
-All generation happens at build time. **Zero runtime overhead.**
-
----
-
-## Contributing
-
-We welcome contributions! See [CONTRIBUTING.md](docs/contributing.md) for:
-- Development setup
-- Code style guidelines
-- Testing requirements
-- PR process
-
-**Good first issues:** Look for `good-first-issue` label
-
----
-
-## Community
-
-- **GitHub**: [chizy7/polyglot-ffi](https://github.com/chizy7/polyglot-ffi)
-- **Issues**: [Report bugs](https://github.com/chizy7/polyglot-ffi/issues)
-- **Discussions**: Coming soon
-
----
-
-## License
-
-MIT License - See [LICENSE](LICENSE) for details
-
----
-
-## Acknowledgments
-
-Built with inspiration from:
-- [PyO3](https://github.com/PyO3/pyo3) - Rust ↔ Python bindings
-- [Ctypes](https://github.com/ocamllabs/ocaml-ctypes) - OCaml FFI library
-- [SWIG](http://www.swig.org/) - Multi-language wrapper generator
-
----
-## Contact Me
-
-For questions, feedback, or collaboration opportunities:
-
-- **Email**: [chizy@chizyhub.com](mailto:chizy@chizyhub.com)
-- **X(Twitter)**: [![Twitter Follow](https://img.shields.io/twitter/follow/chizyization?style=social)](https://x.com/Chizyization)
-
----
-
-Stop writing FFI boilerplate. Start building amazing things.
+## Installation
 
 ```bash
 pip install polyglot-ffi
 ```
+
+Verify installation:
+```bash
+polyglot-ffi --version
+```
+
+To upgrade:
+```bash
+pip install --upgrade polyglot-ffi
+```
+
+See the [full installation guide](docs/installation.md) for virtual environments, shell completion, and troubleshooting.
+
+## Features
+
+- **Automatic Code Generation** - One command generates OCaml ctypes, C wrappers, Python modules, and build configs
+- **Rich Type Support** - Primitives, records, variants (Result, Option), lists, tuples, and nested types
+- **Type Safety** - Full Python type hints and OCaml type preservation
+- **Memory Safety** - Proper GC integration, no memory leaks
+- **Watch Mode** - Auto-regenerate bindings on file changes
+- **Project Validation** - Built-in dependency and configuration checking
+- **Zero Runtime Overhead** - All generation happens at build time
+
+### Roadmap
+
+- [ ] Rust target support
+- [ ] Go target support
+- [ ] Bidirectional bindings (call Python from OCaml)
+- [ ] Plugin system for custom type mappings
+
+## Use Cases
+
+- **Cryptography** - OCaml for correctness, Python for integration
+- **Data Processing** - OCaml for logic, Python for data science
+- **Financial Systems** - OCaml for algorithms, Python for reporting
+- **ML Infrastructure** - OCaml for pipelines, Python for training
+
+## CLI Reference
+
+```bash
+polyglot-ffi init my-project              # Initialize new project
+polyglot-ffi generate src/module.mli      # Generate bindings
+polyglot-ffi watch                        # Auto-regenerate on changes
+polyglot-ffi check                        # Validate configuration
+polyglot-ffi clean                        # Remove generated files
+polyglot-ffi --help                       # Get help
+```
+
+Run any command with `--help` for full options. See the [CLI documentation](https://chizy7.github.io/polyglot-ffi/) for detailed usage.
+
+## Documentation
+
+- **[Quickstart Guide](docs/quickstart.md)** - Get started in 5 minutes
+- **[Type Mapping](docs/type-mapping.md)** - Complete type system reference
+- **[Architecture](docs/architecture.md)** - How it works under the hood
+- **[Installation Guide](docs/installation.md)** - Detailed setup instructions
+- **[Contributing](docs/contributing.md)** - Join development
+
+## Contributing & Community
+
+We welcome contributions! See [CONTRIBUTING.md](docs/contributing.md) for development setup, testing requirements, and PR process. Look for `good-first-issue` labels to get started.
+
+**Get in touch:**
+- **GitHub**: [chizy7/polyglot-ffi](https://github.com/chizy7/polyglot-ffi)
+- **Issues**: [Report bugs or request features](https://github.com/chizy7/polyglot-ffi/issues)
+- **Email**: [chizy@chizyhub.com](mailto:chizy@chizyhub.com)
+- **Twitter**: [@Chizyization](https://x.com/Chizyization)
+
+## License
+
+MIT License - See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+Built with inspiration from [PyO3](https://github.com/PyO3/pyo3), [OCaml-Ctypes](https://github.com/ocamllabs/ocaml-ctypes), and [SWIG](http://www.swig.org/).
