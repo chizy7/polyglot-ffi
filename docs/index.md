@@ -185,15 +185,20 @@ Proper memory management:
 - String ownership handled
 - GC-safe conversions
 
-### Release Highlights (v0.4.0)
+### Release Highlights (v0.5.0)
 
-- **Comprehensive test suite (75% coverage, 262 tests)**
-- **Shell completions (Bash, Zsh, Fish)**
+- **OCaml Runtime Initialization** - Automatic initialization fixes Python integration
+- **Platform Detection** - Works on macOS (.dylib), Linux (.so), Windows (.dll)
+- **Build System Improvements** - Threading support, reduced warnings
+- **All Type Tests Working** - Complete Python FFI integration across all types
+
+### Previous Release (v0.4.0)
+
+- Comprehensive test suite (75% coverage, 262 tests)
+- Shell completions (Bash, Zsh, Fish)
 - Rich error messages with suggestions
 - CLI with progress indicators
-- Dry run mode and force regeneration
 - Watch mode for auto-regeneration
-- Configuration validation
 
 ## Architecture Overview
 

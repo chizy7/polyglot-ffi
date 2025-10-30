@@ -22,7 +22,7 @@ pip install -e ".[dev]"
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.4.3
+# Output: polyglot-ffi, version 0.5.0
 ```
 
 ## Your First Project
@@ -414,4 +414,4 @@ See [Installation Guide](installation.md#upgrading) for more options.
 
 **Ready to eliminate FFI boilerplate?** Let's build something amazing!
 
-**Version:** 0.4.3 | **Documentation:** https://polyglotffi.com/
+**Version:** 0.5.0 | **Documentation:** https://polyglotffi.com/

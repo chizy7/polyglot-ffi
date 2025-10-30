@@ -8,7 +8,7 @@
 
 Polyglot FFI aims to eliminate FFI boilerplate by automatically generating type-safe, memory-safe bindings between programming languages. Our goal is to support multiple source and target languages with excellent developer experience.
 
-### Current Status: **v0.4.3 - In Production** 
+### Current Status: **v0.5.0 - In Production** 
 - 285 tests passing (88% coverage)
 - Complete documentation
 - Full CI/CD automation
@@ -461,7 +461,7 @@ Polyglot FFI aims to eliminate FFI boilerplate by automatically generating type-
 ## Success Metrics
 
 ### Technical Metrics
-| Metric | v0.4.0 (Current) | v1.0 Goal | v2.0 Goal |
+| Metric | v0.5.0 (Current) | v1.0 Goal | v2.0 Goal |
 |--------|------------------|-----------|-----------|
 | Test Coverage | 88% | 95% | 98% |
 | Tests | 285 | 500+ | 1000+ |
@@ -472,7 +472,7 @@ Polyglot FFI aims to eliminate FFI boilerplate by automatically generating type-
 *OCaml, Python, C (Rust types mapped but not generated yet)
 
 ### Community Metrics
-| Metric | v0.4.0 | v1.0 Goal | v2.0 Goal |
+| Metric | v0.5.0 | v1.0 Goal | v2.0 Goal |
 |--------|--------|-----------|-----------|
 | GitHub Stars | TBD | 100+ | 500+ |
 | Contributors | 1 | 10+ | 25+ |
@@ -565,4 +565,4 @@ Have ideas for the roadmap? Want to influence priorities?
 
 ---
 
-**Current Focus:** Fix bugs in v0.4.3 and publish to PyPI and grow the community!
+**Current Focus:** Fix bugs in v0.5.0 and publish to PyPI and grow the community!
