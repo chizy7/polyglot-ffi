@@ -66,3 +66,10 @@ htmlcov/
 # Temporary files
 *.tmp
 .polyglot-cache/
+
+# Testing Guide (for maintainers/contributors - personal notes on fixes and updates to Polyglot FFI - DO NOT COMMIT THIS FILE)
+# You can make local copies for your own notes and save as the names below at the root of the repo
+USER_TESTING_GUIDE.md
+BUGS_FOUND.md
+BUGS_FIX.md
+DOCUMENTATION_UPDATES.md

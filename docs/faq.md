@@ -185,7 +185,7 @@ Suggestion: Define 'custom_type' in the same .mli file
 
 ```bash
 # Generate with verbose output
-polyglot-ffi generate mylib.mli --verbose
+polyglot-ffi generate mylib.mli -v
 
 # Check generated files
 ls -la generated/

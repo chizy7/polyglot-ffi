@@ -25,17 +25,19 @@ def cli(ctx: click.Context, verbose: bool) -> None:
     memory-safe bindings automatically.
     """
     ctx.ensure_object(dict)
-    ctx.obj["verbose"] = verbose
+    # Store global verbose for backward compatibility
+    ctx.obj["global_verbose"] = verbose
 
 
 @cli.command()
 @click.option("--lang", multiple=True, help="Target languages (e.g., python, rust)")
 @click.option("--template", default="library", help="Project template")
 @click.option("--interactive", is_flag=True, help="Interactive project setup")
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
 @click.argument("project_name", required=False)
 @click.pass_context
 def init(
-    ctx: click.Context, project_name: Optional[str], lang: tuple, template: str, interactive: bool
+    ctx: click.Context, project_name: Optional[str], lang: tuple, template: str, interactive: bool, verbose: bool
 ) -> None:
     """
     Initialize a new polyglot FFI project.
@@ -45,7 +47,8 @@ def init(
     """
     from polyglot_ffi.commands.init import init_project
 
-    verbose = ctx.obj.get("verbose", False)
+    # Use local verbose flag OR global verbose flag (support both positions)
+    verbose = verbose or ctx.obj.get("global_verbose", False)
 
     if interactive:
         console.print("[bold blue]Interactive Project Setup[/bold blue]")
@@ -112,6 +115,7 @@ def init(
 @click.option("--target", multiple=True, help="Target languages")
 @click.option("--dry-run", is_flag=True, help="Show what would be generated")
 @click.option("--force", is_flag=True, help="Force regeneration")
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
 @click.pass_context
 def generate(
     ctx: click.Context,
@@ -121,6 +125,7 @@ def generate(
     target: tuple,
     dry_run: bool,
     force: bool,
+    verbose: bool,
 ) -> None:
     """
     Generate FFI bindings from source files.
@@ -132,7 +137,8 @@ def generate(
     """
     from polyglot_ffi.commands.generate import generate_bindings
 
-    verbose = ctx.obj.get("verbose", False)
+    # Use local verbose flag OR global verbose flag (support both positions)
+    verbose = verbose or ctx.obj.get("global_verbose", False)
 
     # If no source file provided, look for config
     if not source_file:
@@ -215,8 +221,9 @@ def generate(
 @cli.command()
 @click.argument("paths", nargs=-1, type=click.Path(exists=True))
 @click.option("--build", is_flag=True, help="Build after regeneration")
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
 @click.pass_context
-def watch(ctx: click.Context, paths: tuple, build: bool) -> None:
+def watch(ctx: click.Context, paths: tuple, build: bool, verbose: bool) -> None:
     """
     Watch source files and auto-regenerate bindings on changes.
 
@@ -228,7 +235,8 @@ def watch(ctx: click.Context, paths: tuple, build: bool) -> None:
     from polyglot_ffi.commands.watch import watch_files
     from pathlib import Path
 
-    verbose = ctx.obj.get("verbose", False)
+    # Use local verbose flag OR global verbose flag (support both positions)
+    verbose = verbose or ctx.obj.get("global_verbose", False)
 
     try:
         watch_files(
@@ -251,8 +259,9 @@ def watch(ctx: click.Context, paths: tuple, build: bool) -> None:
 @cli.command()
 @click.option("--check-deps", is_flag=True, help="Check dependencies")
 @click.option("--lang", help="Check specific language support")
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
 @click.pass_context
-def check(ctx: click.Context, check_deps: bool, lang: Optional[str]) -> None:
+def check(ctx: click.Context, check_deps: bool, lang: Optional[str], verbose: bool) -> None:
     """
     Validate project configuration and dependencies.
 
@@ -263,7 +272,8 @@ def check(ctx: click.Context, check_deps: bool, lang: Optional[str]) -> None:
     """
     from polyglot_ffi.commands.check import check_project, display_check_results
 
-    verbose = ctx.obj.get("verbose", False)
+    # Use local verbose flag OR global verbose flag (support both positions)
+    verbose = verbose or ctx.obj.get("global_verbose", False)
 
     try:
         results = check_project(check_deps=check_deps, lang=lang)
@@ -288,8 +298,9 @@ def check(ctx: click.Context, check_deps: bool, lang: Optional[str]) -> None:
 @cli.command()
 @click.option("--all", is_flag=True, help="Clean all generated files")
 @click.option("--dry-run", is_flag=True, help="Show what would be deleted")
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
 @click.pass_context
-def clean(ctx: click.Context, all: bool, dry_run: bool) -> None:
+def clean(ctx: click.Context, all: bool, dry_run: bool, verbose: bool) -> None:
     """
     Clean generated files.
 
@@ -300,7 +311,8 @@ def clean(ctx: click.Context, all: bool, dry_run: bool) -> None:
     """
     from polyglot_ffi.commands.clean import clean_project
 
-    verbose = ctx.obj.get("verbose", False)
+    # Use local verbose flag OR global verbose flag (support both positions)
+    verbose = verbose or ctx.obj.get("global_verbose", False)
 
     try:
         clean_project(all_files=all, dry_run=dry_run)
