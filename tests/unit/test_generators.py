@@ -50,8 +50,8 @@ class TestCtypesGenerator:
         gen = CtypesGenerator()
         result = gen.generate_type_description(simple_module)
 
-        assert "open Ctypes" in result
         assert "module Types" in result
+        assert "Ctypes.TYPE" in result
 
     def test_generate_function_description(self, simple_module):
         """Test generating function_description.ml."""
@@ -83,7 +83,7 @@ class TestCStubGenerator:
 
         assert "#include <caml/mlvalues.h>" in result
         assert "#include <caml/callback.h>" in result
-        assert "char* ml_greet(char* name)" in result
+        assert "const char* ml_greet(const char* name)" in result
         assert "CAMLparam0()" in result
         assert "caml_copy_string" in result
         assert "caml_callback" in result
@@ -96,7 +96,7 @@ class TestCStubGenerator:
 
         assert "#ifndef EXAMPLE_STUBS_H" in result
         assert "#define EXAMPLE_STUBS_H" in result
-        assert "char* ml_greet(char* name);" in result
+        assert "const char* ml_greet(const char* name);" in result
 
     def test_multi_parameter_stubs(self, multi_param_module):
         """Test generating stubs for multi-parameter function."""
@@ -146,8 +146,8 @@ class TestDuneGenerator:
         assert "(name example_bindings)" in result
         assert "(libraries ctypes ctypes.foreign)" in result
         assert "(ctypes" in result
-        assert "example_stubs.c" in result
         assert "example_stubs.h" in result
+        assert "(preamble" in result
 
     def test_generate_dune_project(self):
         """Test generating dune-project file."""
