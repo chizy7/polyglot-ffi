@@ -1723,7 +1723,7 @@
 
 <h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p><strong>Version:</strong> v0.4.3</p>
+<p><strong>Version:</strong> v0.5.0</p>
 <p>Polyglot FFI uses a multi-stage pipeline to generate FFI bindings:</p>
 <pre class="mermaid"><code>flowchart LR
     A["Source File (.mli)"] --&gt; B["Parser"]
@@ -1845,20 +1845,25 @@
 - <code>function_description.ml</code> - Foreign function declarations</p>
 <h4 id="b-c-stub-generator-c_stubs_genpy">B. C Stub Generator (<code>c_stubs_gen.py</code>)<a class="headerlink" href="#b-c-stub-generator-c_stubs_genpy" title="Permanent link">&para;</a></h4>
 <p>Generates C wrapper code:
+- <strong>OCaml runtime initialization</strong> (<code>ml_init()</code> function with guard)
 - Proper CAMLparam/CAMLlocal/CAMLreturn macros
 - Type conversions (OCaml ↔ C)
 - Memory management (strdup for strings)
 - Multi-parameter callback support</p>
 <h4 id="c-python-generator-python_genpy">C. Python Generator (<code>python_gen.py</code>)<a class="headerlink" href="#c-python-generator-python_genpy" title="Permanent link">&para;</a></h4>
 <p>Generates Python wrapper:
+- <strong>Automatic runtime initialization</strong> (calls <code>ml_init()</code> at import)
+- <strong>Platform detection</strong> (macOS .dylib, Linux .so, Windows .dll)
 - Type hints
 - Error handling with custom exceptions
 - UTF-8 encoding/decoding
 - Pythonic API</p>
 <h4 id="d-dune-generator-dune_genpy">D. Dune Generator (<code>dune_gen.py</code>)<a class="headerlink" href="#d-dune-generator-dune_genpy" title="Permanent link">&para;</a></h4>
 <p>Generates build configuration:
-- <code>dune</code> - Library and rule definitions
-- <code>dune-project</code> - Project metadata</p>
+- <code>dune</code> - Library and rule definitions with threading support
+- <code>dune-project</code> - Project metadata
+- <strong>Shared library creation</strong> rules for macOS and Linux
+- <strong>Threading library linking</strong> (-lunix -lthreadsnat)</p>
 <h3 id="5-commands-srcpolyglot_fficommands">5. Commands (<code>src/polyglot_ffi/commands/</code>)<a class="headerlink" href="#5-commands-srcpolyglot_fficommands" title="Permanent link">&para;</a></h3>
 <p>High-level command implementations:</p>
 <ul>
