@@ -49,6 +49,8 @@ polyglot-ffi init my-crypto-lib
 cd my-crypto-lib
 ```
 
+**Note on project names:** You can use hyphens in project names (like `my-crypto-lib`). The tool automatically converts them to underscores for generated code to ensure compatibility with OCaml, C, and Python naming requirements.
+
 Write your OCaml interface:
 
 ```ocaml
@@ -103,6 +105,17 @@ pip install --upgrade polyglot-ffi
 ```
 
 See the [full installation guide](docs/installation.md) for virtual environments, shell completion, and troubleshooting.
+
+### Prerequisites for Building Generated Bindings
+
+If you want to **build and use** the generated OCaml bindings (not just generate them), you'll need:
+
+```bash
+# Install OCaml and required libraries
+opam install dune ctypes ctypes-foreign
+```
+
+**Note:** polyglot-ffi itself is a Python tool and doesn't require OCaml. OCaml dependencies are only needed if you want to compile the generated bindings.
 
 ## Features
 

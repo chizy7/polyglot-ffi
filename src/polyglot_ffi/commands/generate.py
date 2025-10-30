@@ -10,6 +10,7 @@ from polyglot_ffi.generators.c_stubs_gen import CStubGenerator
 from polyglot_ffi.generators.python_gen import PythonGenerator
 from polyglot_ffi.generators.dune_gen import DuneGenerator
 from polyglot_ffi.parsers.ocaml import parse_mli_file, ParseError
+from polyglot_ffi.utils.naming import sanitize_module_name
 
 
 def generate_bindings(
@@ -47,6 +48,10 @@ def generate_bindings(
     # Determine module name
     if not module_name:
         module_name = source_path.stem
+
+    # Sanitize module name for use in filenames and identifiers
+    # Keep original for display, use sanitized for files/identifiers
+    safe_module_name = sanitize_module_name(module_name)
 
     # Determine output directory
     if not output_dir:
@@ -100,15 +105,18 @@ def generate_bindings(
         print("Generating C stubs...")
 
     c_stub_gen = CStubGenerator()
-    c_stubs = c_stub_gen.generate_stubs(ir_module, module_name)
-    c_header = c_stub_gen.generate_header(ir_module, module_name)
+    c_stubs = c_stub_gen.generate_stubs(ir_module, safe_module_name)
+    c_header = c_stub_gen.generate_header(ir_module, safe_module_name)
 
     if not dry_run:
-        (output_path / f"{module_name}_stubs.c").write_text(c_stubs)
-        (output_path / f"{module_name}_stubs.h").write_text(c_header)
+        (output_path / f"{safe_module_name}_stubs.c").write_text(c_stubs)
+        (output_path / f"{safe_module_name}_stubs.h").write_text(c_header)
 
     generated_files.extend(
-        [str(output_path / f"{module_name}_stubs.c"), str(output_path / f"{module_name}_stubs.h")]
+        [
+            str(output_path / f"{safe_module_name}_stubs.c"),
+            str(output_path / f"{safe_module_name}_stubs.h"),
+        ]
     )
 
     # Generate Dune configuration
@@ -116,8 +124,8 @@ def generate_bindings(
         print("Generating Dune configuration...")
 
     dune_gen = DuneGenerator()
-    dune_config = dune_gen.generate_dune(module_name)
-    dune_project = dune_gen.generate_dune_project(module_name)
+    dune_config = dune_gen.generate_dune(safe_module_name)
+    dune_project = dune_gen.generate_dune_project(safe_module_name)
 
     if not dry_run:
         (output_path / "dune").write_text(dune_config)
@@ -131,12 +139,12 @@ def generate_bindings(
             print("Generating Python wrapper...")
 
         python_gen = PythonGenerator()
-        python_wrapper = python_gen.generate(ir_module, module_name)
+        python_wrapper = python_gen.generate(ir_module, safe_module_name)
 
         if not dry_run:
-            (output_path / f"{module_name}_py.py").write_text(python_wrapper)
+            (output_path / f"{safe_module_name}_py.py").write_text(python_wrapper)
 
-        generated_files.append(str(output_path / f"{module_name}_py.py"))
+        generated_files.append(str(output_path / f"{safe_module_name}_py.py"))
 
     return {
         "success": True,

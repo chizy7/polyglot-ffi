@@ -1,4 +1,4 @@
-.TH POLYGLOT-FFI-GENERATE 1 "2025-10-23" "v0.4.1" "Polyglot FFI Manual"
+.TH POLYGLOT-FFI-GENERATE 1 "2025-10-23" "v0.4.3" "Polyglot FFI Manual"
 .SH NAME
 polyglot-ffi-generate \- Generate FFI bindings from interface files
 .SH SYNOPSIS
@@ -161,3 +161,20 @@ Rich formatted output with colors
 .SH NOTES
 After generation, integrate the generated files into your build system using
 the generated dune configuration or Makefile.
+.PP
+.B Prerequisites for Building
+.br
+To build the generated bindings, you need:
+.EX
+opam install dune ctypes ctypes-foreign
+.EE
+.PP
+.B Project Names with Hyphens
+.br
+Project names with hyphens (e.g., my-crypto-lib) are automatically converted
+to underscores in generated code for compatibility with OCaml, C, and Python
+naming requirements. When copying source files to the generated directory for
+building, rename files to use underscores:
+.EX
+cp src/my-crypto-lib.ml generated/my_crypto_lib.ml
+.EE

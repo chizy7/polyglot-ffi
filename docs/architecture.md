@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Version:** v0.4.1
+**Version:** v0.4.3
 
 Polyglot FFI uses a multi-stage pipeline to generate FFI bindings:
 
