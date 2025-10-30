@@ -109,7 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better error handling in clean command
 - CodeRabbit analysis issues resolved
 
-## [0.3.0] - 2024-10-22
+## [0.3.0] - 2025-10-22
 
 ### Added
 - **Watch Mode:**
@@ -141,7 +141,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved error handling across all commands
 - Better user feedback during operations
 
-## [0.2.0] - 2024-10-19
+## [0.2.0] - 2025-10-19
 
 ### Added
 - **Complex Types Support:**
@@ -169,7 +169,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved code generation for nested types
 - Better memory management for complex types in C stubs
 
-## [0.1.0] - 2024-10-15
+## [0.1.0] - 2025-10-15
 
 ### Added
 - **Core Functionality:**
