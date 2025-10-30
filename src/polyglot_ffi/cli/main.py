@@ -37,7 +37,12 @@ def cli(ctx: click.Context, verbose: bool) -> None:
 @click.argument("project_name", required=False)
 @click.pass_context
 def init(
-    ctx: click.Context, project_name: Optional[str], lang: tuple, template: str, interactive: bool, verbose: bool
+    ctx: click.Context,
+    project_name: Optional[str],
+    lang: tuple,
+    template: str,
+    interactive: bool,
+    verbose: bool,
 ) -> None:
     """
     Initialize a new polyglot FFI project.
