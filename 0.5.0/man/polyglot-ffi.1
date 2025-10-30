@@ -1,0 +1,116 @@
+.TH POLYGLOT-FFI 1 "2025-10-30" "v0.5.0" "Polyglot FFI Manual"
+.SH NAME
+polyglot-ffi \- Automatic FFI bindings generator for polyglot projects
+.SH SYNOPSIS
+.B polyglot-ffi
+[\fIcommand\fR] [\fIoptions\fR]
+.SH DESCRIPTION
+.B polyglot-ffi
+automatically generates Foreign Function Interface (FFI) bindings between
+programming languages. It parses source language interface files and generates
+complete FFI bindings including type descriptions, C stubs, and target language
+wrappers.
+.PP
+Currently supports OCaml → Python bindings generation, with plans for Rust,
+Go, and bidirectional bindings.
+.SH COMMANDS
+.TP
+.B init
+Initialize a new polyglot FFI project
+.TP
+.B generate
+Generate FFI bindings from interface files
+.TP
+.B check
+Validate project configuration and dependencies
+.TP
+.B clean
+Remove generated FFI binding files
+.TP
+.B watch
+Watch for changes and auto-regenerate bindings
+.SH GLOBAL OPTIONS
+.TP
+.B \-h, \-\-help
+Show help message and exit
+.TP
+.B \-\-version
+Show version number and exit
+.TP
+.B \-v, \-\-verbose
+Enable verbose output. Can be used globally (before command) or per-command
+(after command). Example: \fBpolyglot-ffi -v generate\fR or
+\fBpolyglot-ffi generate -v\fR
+.TP
+.B \-q, \-\-quiet
+Suppress all output except errors
+.SH FILES
+.TP
+.B polyglot.toml
+Project configuration file. See \fBpolyglot-ffi-config\fR(5) for format details.
+.TP
+.B .polyglot/
+Directory containing generated bindings and build artifacts
+.SH EXAMPLES
+.TP
+Initialize a new project:
+.EX
+$ polyglot-ffi init my-project --lang python
+.EE
+.TP
+Generate bindings from an OCaml interface file:
+.EX
+$ polyglot-ffi generate crypto.mli --output generated/
+.EE
+.TP
+Check project configuration and dependencies:
+.EX
+$ polyglot-ffi check
+.EE
+.TP
+Clean generated files:
+.EX
+$ polyglot-ffi clean --dry-run
+.EE
+.TP
+Watch for changes and auto-regenerate:
+.EX
+$ polyglot-ffi watch
+.EE
+.SH ENVIRONMENT
+.TP
+.B POLYGLOT_FFI_CONFIG
+Override default config file location
+.TP
+.B POLYGLOT_FFI_OUTPUT
+Override default output directory
+.SH EXIT STATUS
+.TP
+.B 0
+Success
+.TP
+.B 1
+General error (parse error, generation error, etc.)
+.TP
+.B 2
+Configuration error
+.TP
+.B 3
+Validation error
+.SH SEE ALSO
+.BR polyglot-ffi-init (1),
+.BR polyglot-ffi-generate (1),
+.BR polyglot-ffi-check (1),
+.BR polyglot-ffi-clean (1),
+.BR polyglot-ffi-watch (1),
+.BR polyglot-ffi-config (5)
+.SH BUGS
+Report bugs at: https://github.com/chizy7/polyglot-ffi/issues
+.SH AUTHORS
+Written by the Polyglot FFI contributors.
+.SH COPYRIGHT
+Copyright © 2025 Polyglot FFI Contributors.
+License: MIT License
+.SH NOTES
+This tool eliminates the tedious boilerplate of manual FFI binding generation,
+allowing developers to focus on building amazing polyglot applications.
