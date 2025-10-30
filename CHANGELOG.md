@@ -13,6 +13,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.4.3] - 2025-01-30
+
+### Fixed
+- **Build System (Critical):**
+  - Fixed dune-project format error - moved comment after required `(lang dune 3.16)` declaration
+  - Removed incorrect manual ocamlmklib rule that conflicted with dune's ctypes extension
+  - Fixed include path for local headers - changed from `(include ...)` to `(preamble ...)` directive
+  - Fixed C type const correctness - updated string parameters from `char*` to `const char*`
+
+- **Code Generation:**
+  - Fixed ctypes function signature type mismatch - added `open F` in functor body
+  - Fixed unused open warning in type_description.ml
+  - Comprehensive module name sanitization - hyphens now converted to underscores throughout
+
+- **Name Sanitization:**
+  - Project names with hyphens (e.g., `my-crypto-lib`) now work correctly
+  - Created centralized naming utility for consistent sanitization
+  - All generators now use sanitized names for files, libraries, and identifiers
+  - Applies to: Dune configs, C stubs, Python wrappers, all generated filenames
+
+### Changed
+- C stub generator now uses `const char*` for string types (improved const correctness)
+- Dune generator uses preamble directive for local headers instead of include
+- All generators import and use centralized `sanitize_module_name()` function
+
+### Documentation
+- **Prerequisites:** Added OCaml build dependencies (dune, ctypes, ctypes-foreign) to README, quickstart, and man pages
+- **Hyphenated Names:** Documented automatic sanitization and file renaming requirements
+- **Troubleshooting:** Added FAQ entries for common build errors:
+  - "Library ctypes not found" error and solution
+  - "Invalid module name" error with hyphenated projects
+  - File renaming guidance when copying sources to generated/
+- **Man Pages:** Enhanced polyglot-ffi-generate(1) NOTES section with prerequisites and naming guidance
+- **Examples:** Updated all examples to show correct file naming with underscores
+
+### Technical Details
+- End-to-end build now works successfully with no errors or warnings
+- Generated bindings compile cleanly with dune
+- All build artifacts (`.a`, `.cma`, `.cmxa`, `.so`) created correctly
+- Full compatibility with OCaml module naming requirements
+
 ## [0.4.2] - 2025-01-29
 
 ### Fixed
@@ -199,7 +240,8 @@ Security vulnerability fixes
 
 ---
 
-[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/chizy7/polyglot-ffi/releases/tag/v0.4.1
 [0.4.0]: https://github.com/chizy7/polyglot-ffi/releases/tag/v0.4.0

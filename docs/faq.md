@@ -24,9 +24,9 @@ Polyglot FFI is an automatic Foreign Function Interface (FFI) bindings generator
 
 ### Is it production-ready?
 
-Yes! Version 0.4.1 is production-ready with:
+Yes! Version 0.4.3 is production-ready with:
 - 262 comprehensive tests (0 failures)
-- 75% code coverage
+- 88% code coverage
 - Full CI/CD pipeline
 - Battle-tested on real projects
 
@@ -300,6 +300,37 @@ val create_user : string -> int -> user
 2. Verify your `.mli` syntax is correct
 3. Make sure all types are defined
 4. Try regenerating with `--force` flag
+
+### Project names with hyphens causing errors
+
+**Issue:** Dune build fails with "invalid module name" or "invalid library name"
+
+**Solution:**
+Project names with hyphens (e.g., `my-crypto-lib`) are automatically sanitized in generated code. However, when copying source files to the `generated/` directory for building, you must rename them to use underscores:
+
+```bash
+# Don't do this
+cp src/my-crypto-lib.ml generated/
+
+# Do this instead
+cp src/my-crypto-lib.ml generated/my_crypto_lib.ml
+cp src/my-crypto-lib.mli generated/my_crypto_lib.mli
+```
+
+This is required because OCaml module names cannot contain hyphens.
+
+### "Library ctypes not found" error
+
+**Issue:** `Error: Library "ctypes" not found` when running `dune build`
+
+**Solution:**
+Install the required OCaml dependencies:
+
+```bash
+opam install dune ctypes ctypes-foreign
+```
+
+These are prerequisites for building the generated bindings, but not for the polyglot-ffi tool itself.
 
 ## Best Practices
 

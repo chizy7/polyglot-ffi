@@ -138,7 +138,7 @@ This installs in "editable" mode with development dependencies.
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.4.1
+# Output: polyglot-ffi, version 0.4.3
 ```
 
 ### Check Help

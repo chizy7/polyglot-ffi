@@ -22,7 +22,7 @@ pip install -e ".[dev]"
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.4.1
+# Output: polyglot-ffi, version 0.4.3
 ```
 
 ## Your First Project
@@ -33,6 +33,8 @@ polyglot-ffi --version
 polyglot-ffi init my-crypto-lib
 cd my-crypto-lib
 ```
+
+**Note:** You can use hyphens in project names (like `my-crypto-lib`). Polyglot-ffi automatically converts them to underscores in generated code for compatibility with OCaml, C, and Python naming rules.
 
 This creates:
 ```
@@ -118,14 +120,26 @@ let () =
 
 ### Step 5: Build (Optional - if you have OCaml/Dune)
 
+First, install OCaml build dependencies:
+
+```bash
+# Install OCaml dependencies (one-time setup)
+opam install dune ctypes ctypes-foreign
+```
+
+Then build your bindings:
+
 ```bash
 # Copy implementation to generated directory
-cp src/my-crypto-lib.ml generated/
-cp src/my-crypto-lib.mli generated/
+# Note: If your project name has hyphens, rename files to use underscores
+cp src/my-crypto-lib.ml generated/my_crypto_lib.ml
+cp src/my-crypto-lib.mli generated/my_crypto_lib.mli
 
 cd generated
 dune build
 ```
+
+**Important:** When copying source files with hyphens in their names, rename them to use underscores (e.g., `my-crypto-lib.ml` → `my_crypto_lib.ml`). This ensures compatibility with OCaml's module naming requirements.
 
 ### Step 6: Use from Python
 
@@ -400,4 +414,4 @@ See [Installation Guide](installation.md#upgrading) for more options.
 
 **Ready to eliminate FFI boilerplate?** Let's build something amazing!
 
-**Version:** 0.4.1 | **Documentation:** https://polyglotffi.com/
+**Version:** 0.4.3 | **Documentation:** https://polyglotffi.com/

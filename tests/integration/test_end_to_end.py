@@ -107,9 +107,9 @@ val hash : string -> int
         c_stubs = (output_dir / "crypto_stubs.c").read_text()
 
         assert "#include <caml/mlvalues.h>" in c_stubs
-        assert "char* ml_encrypt(char* input)" in c_stubs
-        assert "char* ml_decrypt(char* input)" in c_stubs
-        assert "int ml_hash(char* input)" in c_stubs
+        assert "const char* ml_encrypt(const char* input)" in c_stubs
+        assert "const char* ml_decrypt(const char* input)" in c_stubs
+        assert "int ml_hash(const char* input)" in c_stubs
         assert "CAMLparam0()" in c_stubs
         assert "caml_callback" in c_stubs
 
