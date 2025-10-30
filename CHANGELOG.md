@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.4.2] - 2025-01-29
+
+### Fixed
+- Verbose flag (-v/--verbose) now works in both positions for better UX
+  - Can now use: `polyglot-ffi generate file.mli -v` (standard position after command)
+  - Still works: `polyglot-ffi -v generate file.mli` (global position before command)
+  - Applies to all commands: init, generate, watch, check, clean
+
+### Documentation
+- Updated all man pages to document verbose flag for each command
+- Added verbose option to OPTIONS section in all command man pages
+- Fixed verbose usage examples in FAQ documentation
+
 ## [0.4.1] - 2025-10-28
 
 ### Changed
@@ -186,6 +199,7 @@ Security vulnerability fixes
 
 ---
 
-[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/chizy7/polyglot-ffi/releases/tag/v0.4.1
 [0.4.0]: https://github.com/chizy7/polyglot-ffi/releases/tag/v0.4.0

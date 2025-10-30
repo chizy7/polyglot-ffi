@@ -2,7 +2,7 @@
 Polyglot FFI - Automatic FFI bindings generator for polyglot projects.
 """
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 __author__ = "Chizaram Chibueze"
 __license__ = "MIT"
 
