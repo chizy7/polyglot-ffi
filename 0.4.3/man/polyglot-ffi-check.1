@@ -1,0 +1,133 @@
+.TH POLYGLOT-FFI-CHECK 1 "2025-01-22" "v0.4.3" "Polyglot FFI Manual"
+.SH NAME
+polyglot-ffi-check \- Validate project configuration and dependencies
+.SH SYNOPSIS
+.B polyglot-ffi check
+[\fIoptions\fR]
+.SH DESCRIPTION
+Validates the project configuration and checks for required dependencies.
+Ensures the environment is correctly set up for FFI bindings generation.
+.PP
+The check command verifies:
+.IP \(bu 2
+Configuration file syntax and schema
+.IP \(bu 2
+Source files exist and are readable
+.IP \(bu 2
+Output directories are writable
+.IP \(bu 2
+Required tools are installed (OCaml, Python, etc.)
+.IP \(bu 2
+Target language dependencies are available
+.SH OPTIONS
+.TP
+.B \-c, \-\-config PATH
+Path to configuration file. Default: ./polyglot.toml
+.TP
+.B \-\-lang LANGUAGE
+Check dependencies for specific language only. Options: ocaml, python, rust, go
+.TP
+.B \-\-fix
+Attempt to fix common issues automatically
+.TP
+.B \-v, \-\-verbose
+Enable verbose output showing detailed check results
+.TP
+.B \-h, \-\-help
+Show help message and exit
+.SH CHECKS PERFORMED
+.SS Configuration Validation
+.IP \(bu 2
+TOML syntax is valid
+.IP \(bu 2
+Required fields are present
+.IP \(bu 2
+Target languages are supported
+.IP \(bu 2
+Source files exist
+.IP \(bu 2
+No duplicate target languages
+.SS Dependency Checks
+.IP \(bu 2
+.B OCaml:
+ocamlc, ocamlfind, dune
+.IP \(bu 2
+.B Python:
+python3, pip
+.IP \(bu 2
+.B Rust:
+rustc, cargo
+.IP \(bu 2
+.B Go:
+go compiler
+.SS File System Checks
+.IP \(bu 2
+Source directory exists
+.IP \(bu 2
+Source files are readable
+.IP \(bu 2
+Output directory is writable
+.IP \(bu 2
+No conflicting generated files
+.SH EXAMPLES
+.TP
+Check entire project:
+.EX
+$ polyglot-ffi check
+.EE
+.TP
+Check specific language dependencies:
+.EX
+$ polyglot-ffi check --lang python
+.EE
+.TP
+Check with custom config file:
+.EX
+$ polyglot-ffi check --config custom.toml
+.EE
+.TP
+Check and attempt to fix issues:
+.EX
+$ polyglot-ffi check --fix
+.EE
+.SH OUTPUT
+The check command displays:
+.IP \(bu 2
+Success for passed checks
+.IP \(bu 2
+Failure for failed checks
+.IP \(bu 2
+Warning for non-critical issues
+.IP \(bu 2
+Suggestions for fixing failures
+.SH EXIT STATUS
+.TP
+.B 0
+All checks passed
+.TP
+.B 1
+One or more checks failed
+.TP
+.B 2
+Configuration file not found or invalid
+.TP
+.B 3
+Missing required dependencies
+.SH DIAGNOSTICS
+When checks fail, the command provides:
+.IP \(bu 2
+Specific error messages
+.IP \(bu 2
+Installation instructions for missing tools
+.IP \(bu 2
+Configuration fix suggestions
+.IP \(bu 2
+Links to documentation
+.SH SEE ALSO
+.BR polyglot-ffi (1),
+.BR polyglot-ffi-init (1),
+.BR polyglot-ffi-generate (1),
+.BR polyglot-ffi-config (5)
+.SH NOTES
+Run this command after cloning a project or changing configuration to ensure
+your environment is correctly set up before generating bindings.
