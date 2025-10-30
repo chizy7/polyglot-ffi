@@ -13,6 +13,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.5.0] - 2025-10-30
+
+### Added
+- **OCaml Runtime Initialization:**
+  - Added `ml_init()` function to C stub generator for proper OCaml runtime initialization
+  - Automatic initialization call in Python wrapper at module import time
+  - Prevents segmentation faults when calling OCaml functions from Python
+  - Idempotent design (safe to call multiple times)
+  - Uses `caml_startup()` to initialize runtime and execute `Callback.register` calls
+
+### Changed
+- **Build System Improvements:**
+  - Added `-thread` flag to OCaml compilation commands for proper threading support
+  - Added threading library linking: `-lunix -lthreadsnat` (both macOS and Linux)
+  - Removed duplicate `-lSystem` flag from macOS linking (already provided by `-lasmrun`)
+  - Platform-specific shared library creation rules now include all necessary runtime libraries
+
+- **Python Wrapper Generation:**
+  - Platform detection now uses correct library extensions: `.dylib` (macOS), `.so` (Linux), `.dll` (Windows)
+  - Runtime initialization happens automatically at module import
+  - Improved error messages for library loading failures
+
+### Fixed
+- **Critical: Python Integration (Issue #21):**
+  - Fixed segmentation fault when calling OCaml functions from Python
+  - Shared libraries now properly embed and initialize OCaml runtime
+  - All Python integration tests now work correctly across all type tests
+  - Complete fix validated with test-fix-check and test-types-float projects
+
+- **Platform Compatibility (Issue #21):**
+  - Fixed hardcoded `.so` extension in Python wrapper generator
+  - Now correctly detects platform and uses appropriate extension
+  - Supports macOS (.dylib), Linux (.so), and Windows (.dll)
+
+- **Build Warnings:**
+  - Eliminated "Package `threads': Linking problems may arise" warning
+  - Eliminated "ignoring duplicate libraries: '-lSystem'" warning on macOS
+  - Reduced build warnings from 3 to 1 (remaining warning is harmless)
+
+### Technical Details
+- **OCaml Runtime:**
+  - Uses static flag `_ocaml_initialized` to ensure single initialization
+  - `caml_startup(argv)` called with NULL argv (command-line args not needed)
+  - All `Callback.register` calls execute during runtime initialization
+  - Functions accessible via `caml_named_value()` after initialization
+
+- **Shared Library Structure:**
+  - Compiles C stubs separately to `.o` file with PIC (-fPIC)
+  - Compiles OCaml code with `-output-obj` to create object file with embedded runtime
+  - Links both object files with gcc to create final shared library
+  - Uses `(mode promote)` to copy library from _build to source tree
+
+- **Threading Support:**
+  - Links against `libthreadsnat.a` for native threading support
+  - Links against `libunix.a` for Unix system call support
+  - Library size increased from ~398K to ~1.2M due to additional runtime support
+  - No performance impact observed
+
+### Testing
+- All functionality tests pass (test-fix-check, test-types-float)
+- No segmentation faults
+- Correct results from all generated functions
+- Platform detection works on macOS (tested)
+- Build warnings reduced from 3 to 1 harmless warning
+
 ## [0.4.3] - 2025-01-30
 
 ### Fixed
@@ -240,7 +305,8 @@ Security vulnerability fixes
 
 ---
 
-[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/chizy7/polyglot-ffi/releases/tag/v0.4.1

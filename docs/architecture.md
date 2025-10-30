@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Version:** v0.4.3
+**Version:** v0.5.0
 
 Polyglot FFI uses a multi-stage pipeline to generate FFI bindings:
 
@@ -154,6 +154,7 @@ Generates OCaml ctypes bindings:
 #### B. C Stub Generator (`c_stubs_gen.py`)
 
 Generates C wrapper code:
+- **OCaml runtime initialization** (`ml_init()` function with guard)
 - Proper CAMLparam/CAMLlocal/CAMLreturn macros
 - Type conversions (OCaml ↔ C)
 - Memory management (strdup for strings)
@@ -162,6 +163,8 @@ Generates C wrapper code:
 #### C. Python Generator (`python_gen.py`)
 
 Generates Python wrapper:
+- **Automatic runtime initialization** (calls `ml_init()` at import)
+- **Platform detection** (macOS .dylib, Linux .so, Windows .dll)
 - Type hints
 - Error handling with custom exceptions
 - UTF-8 encoding/decoding
@@ -170,8 +173,10 @@ Generates Python wrapper:
 #### D. Dune Generator (`dune_gen.py`)
 
 Generates build configuration:
-- `dune` - Library and rule definitions
+- `dune` - Library and rule definitions with threading support
 - `dune-project` - Project metadata
+- **Shared library creation** rules for macOS and Linux
+- **Threading library linking** (-lunix -lthreadsnat)
 
 ### 5. Commands (`src/polyglot_ffi/commands/`)
 

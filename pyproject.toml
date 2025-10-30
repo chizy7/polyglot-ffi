@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "polyglot-ffi"
-version = "0.4.3"
+version = "0.5.0"
 description = "Automatic FFI bindings generator for polyglot projects"
 readme = "README.md"
 requires-python = ">=3.8"

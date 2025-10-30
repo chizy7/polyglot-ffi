@@ -30,6 +30,46 @@ class DuneGenerator:
    (functor Function_description))
   (generated_types Types_generated)
   (generated_entry_point C)))
+
+; Compile C stubs to object file
+(rule
+ (targets {safe_name}_stubs.o)
+ (deps {safe_name}_stubs.c {safe_name}_stubs.h)
+ (action
+  (run gcc -c -I%{{ocaml_where}} -fPIC {safe_name}_stubs.c -o {safe_name}_stubs.o)))
+
+; Build OCaml object file for standalone shared library
+(rule
+ (targets lib{safe_name}_ocaml.o)
+ (deps {safe_name}.ml {safe_name}.mli)
+ (action
+  (progn
+   (run ocamlfind ocamlopt -c -thread -package ctypes.foreign {safe_name}.mli)
+   (run ocamlfind ocamlopt -thread -output-obj -o lib{safe_name}_ocaml.o
+    -package ctypes.foreign -linkpkg
+    {safe_name}.ml))))
+
+; Create .dylib from object files on macOS
+(rule
+ (targets lib{safe_name}.dylib)
+ (deps lib{safe_name}_ocaml.o {safe_name}_stubs.o)
+ (enabled_if (= %{{system}} macosx))
+ (mode promote)
+ (action
+  (run gcc -dynamiclib -o lib{safe_name}.dylib
+   lib{safe_name}_ocaml.o {safe_name}_stubs.o
+   -L%{{ocaml_where}} -lasmrun -lunix -lthreadsnat)))
+
+; Create .so from object files on Linux
+(rule
+ (targets lib{safe_name}.so)
+ (deps lib{safe_name}_ocaml.o {safe_name}_stubs.o)
+ (enabled_if (= %{{system}} linux))
+ (mode promote)
+ (action
+  (run gcc -shared -o lib{safe_name}.so
+   lib{safe_name}_ocaml.o {safe_name}_stubs.o
+   -L%{{ocaml_where}} -lasmrun -lunix -lthreadsnat)))
 """
 
     def generate_dune_project(self, module_name: str) -> str:

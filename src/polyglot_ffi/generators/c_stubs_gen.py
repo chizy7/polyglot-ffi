@@ -40,6 +40,17 @@ class CStubGenerator:
             "#include <caml/alloc.h>",
             "#include <caml/callback.h>",
             "",
+            "/* OCaml runtime initialization - call once before using any functions */",
+            "static int _ocaml_initialized = 0;",
+            "",
+            "void ml_init(void) {",
+            "    if (!_ocaml_initialized) {",
+            "        char* argv[] = {NULL};",
+            "        caml_startup(argv);",
+            "        _ocaml_initialized = 1;",
+            "    }",
+            "}",
+            "",
         ]
 
         for func in module.functions:
@@ -59,6 +70,9 @@ class CStubGenerator:
             "",
             f"#ifndef {guard}",
             f"#define {guard}",
+            "",
+            "/* Initialize OCaml runtime - must be called before any other functions */",
+            "void ml_init(void);",
             "",
         ]
 
