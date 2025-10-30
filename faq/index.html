@@ -1336,6 +1336,24 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#project-names-with-hyphens-causing-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project names with hyphens causing errors
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-ctypes-not-found-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      "Library ctypes not found" error
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2024,6 +2042,24 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#project-names-with-hyphens-causing-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project names with hyphens causing errors
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-ctypes-not-found-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      "Library ctypes not found" error
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2225,9 +2261,9 @@
 - OCaml → Rust
 - OCaml → Go</p>
 <h3 id="is-it-production-ready">Is it production-ready?<a class="headerlink" href="#is-it-production-ready" title="Permanent link">&para;</a></h3>
-<p>Yes! Version 0.4.1 is production-ready with:
+<p>Yes! Version 0.4.3 is production-ready with:
 - 262 comprehensive tests (0 failures)
-- 75% code coverage
+- 88% code coverage
 - Full CI/CD pipeline
 - Battle-tested on real projects</p>
 <h2 id="installation-setup">Installation &amp; Setup<a class="headerlink" href="#installation-setup" title="Permanent link">&para;</a></h2>
@@ -2421,15 +2457,34 @@
 <li>Make sure all types are defined</li>
 <li>Try regenerating with <code>--force</code> flag</li>
 </ol>
+<h3 id="project-names-with-hyphens-causing-errors">Project names with hyphens causing errors<a class="headerlink" href="#project-names-with-hyphens-causing-errors" title="Permanent link">&para;</a></h3>
+<p><strong>Issue:</strong> Dune build fails with "invalid module name" or "invalid library name"</p>
+<p><strong>Solution:</strong>
+Project names with hyphens (e.g., <code>my-crypto-lib</code>) are automatically sanitized in generated code. However, when copying source files to the <code>generated/</code> directory for building, you must rename them to use underscores:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Don&#39;t do this</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>cp<span class="w"> </span>src/my-crypto-lib.ml<span class="w"> </span>generated/
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Do this instead</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>cp<span class="w"> </span>src/my-crypto-lib.ml<span class="w"> </span>generated/my_crypto_lib.ml
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>cp<span class="w"> </span>src/my-crypto-lib.mli<span class="w"> </span>generated/my_crypto_lib.mli
+</code></pre></div>
+<p>This is required because OCaml module names cannot contain hyphens.</p>
+<h3 id="library-ctypes-not-found-error">"Library ctypes not found" error<a class="headerlink" href="#library-ctypes-not-found-error" title="Permanent link">&para;</a></h3>
+<p><strong>Issue:</strong> <code>Error: Library "ctypes" not found</code> when running <code>dune build</code></p>
+<p><strong>Solution:</strong>
+Install the required OCaml dependencies:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>opam<span class="w"> </span>install<span class="w"> </span>dune<span class="w"> </span>ctypes<span class="w"> </span>ctypes-foreign
+</code></pre></div>
+<p>These are prerequisites for building the generated bindings, but not for the polyglot-ffi tool itself.</p>
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <h3 id="project-structure">Project structure<a class="headerlink" href="#project-structure" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>my-project/
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>├── src/
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>│   ├── mylib.mli      # Interface (input to polyglot-ffi)
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>│   └── mylib.ml       # Implementation
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>├── generated/          # Generated bindings (don&#39;t edit!)
-<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>├── polyglot.toml      # Configuration
-<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>└── dune-project       # OCaml build config
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>my-project/
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>├── src/
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>│   ├── mylib.mli      # Interface (input to polyglot-ffi)
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>│   └── mylib.ml       # Implementation
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>├── generated/          # Generated bindings (don&#39;t edit!)
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>├── polyglot.toml      # Configuration
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>└── dune-project       # OCaml build config
 </code></pre></div>
 <h3 id="development-workflow">Development workflow<a class="headerlink" href="#development-workflow" title="Permanent link">&para;</a></h3>
 <ol>
@@ -2440,8 +2495,8 @@
 <li>Use from Python: <code>import generated.mylib_py</code></li>
 </ol>
 <h3 id="watch-mode-for-development">Watch mode for development<a class="headerlink" href="#watch-mode-for-development" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Auto-regenerate on file changes</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>polyglot-ffi<span class="w"> </span>watch
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Auto-regenerate on file changes</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>polyglot-ffi<span class="w"> </span>watch
 </code></pre></div>
 <h3 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h3>
 <p>Test both sides of the FFI boundary:
