@@ -21,6 +21,17 @@ polyglot-ffi --version
 pytest tests/ -v
 ```
 
+## Optional Dependencies
+
+If you want to test the generated OCaml bindings (for integration tests):
+
+```bash
+# Install OCaml and required libraries
+opam install dune ctypes ctypes-foreign
+```
+
+**Note:** This is only needed for running integration tests that compile generated bindings. Unit tests don't require OCaml.
+
 ## Development Workflow
 
 1. **Create a branch** for your feature/fix
