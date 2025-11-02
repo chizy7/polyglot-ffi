@@ -125,12 +125,9 @@ class CStubGenerator:
 
         # Declare local variables (only for non-unit parameters)
         # Note: we still need ml_result
-        if non_unit_params:
-            num_locals = len(non_unit_params) + 1
-            local_vars = ", ".join(f"ml_{p.name}" for p in non_unit_params) + ", ml_result"
-            lines.append(f"    CAMLlocal{num_locals}({local_vars});")
-        else:
-            lines.append(f"    CAMLlocal1(ml_result);")
+        for param in non_unit_params:
+            lines.append(f"    CAMLlocal1(ml_{param.name});")
+        lines.append("    CAMLlocal1(ml_result);")
         lines.append("")
 
         # Convert C parameters to OCaml values (skip unit parameters)
