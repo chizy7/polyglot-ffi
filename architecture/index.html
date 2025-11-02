@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
     
     
       
@@ -1723,7 +1723,7 @@
 
 <h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p><strong>Version:</strong> v0.5.0</p>
+<p><strong>Version:</strong> v0.5.1</p>
 <p>Polyglot FFI uses a multi-stage pipeline to generate FFI bindings:</p>
 <pre class="mermaid"><code>flowchart LR
     A["Source File (.mli)"] --&gt; B["Parser"]
@@ -1863,7 +1863,8 @@
 - <code>dune</code> - Library and rule definitions with threading support
 - <code>dune-project</code> - Project metadata
 - <strong>Shared library creation</strong> rules for macOS and Linux
-- <strong>Threading library linking</strong> (-lunix -lthreadsnat)</p>
+- <strong>OCaml library support</strong> - Automatically links additional OCaml libraries (str, unix, threads, etc.)
+- <strong>C library flags</strong> - Adds appropriate C linker flags for OCaml libraries (e.g., <code>-lcamlstr</code> for <code>str</code>)</p>
 <h3 id="5-commands-srcpolyglot_fficommands">5. Commands (<code>src/polyglot_ffi/commands/</code>)<a class="headerlink" href="#5-commands-srcpolyglot_fficommands" title="Permanent link">&para;</a></h3>
 <p>High-level command implementations:</p>
 <ul>
@@ -1955,10 +1956,10 @@
 <li>Add tests</li>
 </ol>
 <h2 id="testing-strategy">Testing Strategy<a class="headerlink" href="#testing-strategy" title="Permanent link">&para;</a></h2>
-<p><strong>Current Status (v0.4.0):</strong>
-- <strong>285 tests passing</strong> 
-- <strong>88% code coverage</strong> 
-- <strong>Test suite</strong> covering all components</p>
+<p><strong>Current Status (v0.5.1):</strong>
+- <strong>364 tests passing</strong>
+- <strong>71% code coverage</strong> (20 modules at 100%)
+- <strong>Comprehensive test suite</strong> covering all components</p>
 <p><strong>Test Categories:</strong></p>
 <ul>
 <li><strong>Unit tests</strong> (<code>tests/unit/</code>) - Test each component independently</li>
