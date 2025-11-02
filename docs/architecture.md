@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Version:** v0.5.0
+**Version:** v0.5.1
 
 Polyglot FFI uses a multi-stage pipeline to generate FFI bindings:
 
@@ -176,7 +176,8 @@ Generates build configuration:
 - `dune` - Library and rule definitions with threading support
 - `dune-project` - Project metadata
 - **Shared library creation** rules for macOS and Linux
-- **Threading library linking** (-lunix -lthreadsnat)
+- **OCaml library support** - Automatically links additional OCaml libraries (str, unix, threads, etc.)
+- **C library flags** - Adds appropriate C linker flags for OCaml libraries (e.g., `-lcamlstr` for `str`)
 
 ### 5. Commands (`src/polyglot_ffi/commands/`)
 
@@ -282,10 +283,10 @@ generated/
 
 ## Testing Strategy
 
-**Current Status (v0.4.0):**
-- **285 tests passing** 
-- **88% code coverage** 
-- **Test suite** covering all components
+**Current Status (v0.5.1):**
+- **364 tests passing**
+- **71% code coverage** (20 modules at 100%)
+- **Comprehensive test suite** covering all components
 
 **Test Categories:**
 

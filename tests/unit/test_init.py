@@ -168,7 +168,7 @@ class TestGenerateConfig:
 
     def test_generate_config_basic(self):
         """Test generating basic configuration."""
-        config = generate_config("my_project", ["python"])
+        config = generate_config("my_project", "my_project", ["python"])
 
         assert "my_project" in config
         assert "[project]" in config
@@ -178,7 +178,7 @@ class TestGenerateConfig:
 
     def test_generate_config_with_multiple_langs(self):
         """Test generating config with multiple target languages."""
-        config = generate_config("multi_proj", ["python", "rust"])
+        config = generate_config("multi_proj", "multi_proj", ["python", "rust"])
 
         assert "multi_proj" in config
         # Config should include project name and structure
@@ -186,7 +186,7 @@ class TestGenerateConfig:
 
     def test_generate_config_has_bindings_section(self):
         """Test that config includes source and target sections."""
-        config = generate_config("test", ["python"])
+        config = generate_config("test", "test", ["python"])
 
         assert "[source]" in config
         assert "[[targets]]" in config
@@ -194,7 +194,7 @@ class TestGenerateConfig:
 
     def test_generate_config_includes_source_file(self):
         """Test that config references the source .mli file."""
-        config = generate_config("mylib", ["python"])
+        config = generate_config("mylib", "mylib", ["python"])
 
         assert "mylib.mli" in config
 

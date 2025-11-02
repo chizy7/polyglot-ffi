@@ -5,6 +5,8 @@ Init command implementation.
 from pathlib import Path
 from typing import Dict, List, Any
 
+from polyglot_ffi.utils.naming import sanitize_module_name
+
 
 def init_project(
     name: str, target_langs: List[str], template: str, verbose: bool
@@ -30,12 +32,15 @@ def init_project(
     project_path.mkdir(parents=True)
     (project_path / "src").mkdir()
 
+    # Sanitize module name for OCaml (replace hyphens with underscores)
+    safe_module_name = sanitize_module_name(name)
+
     # Create polyglot.toml
-    config_content = generate_config(name, target_langs)
+    config_content = generate_config(name, safe_module_name, target_langs)
     (project_path / "polyglot.toml").write_text(config_content, encoding="utf-8")
 
-    # Create example .mli file
-    example_mli = f"""(* {name}.mli - Example OCaml interface *)
+    # Create example .mli file (using sanitized name)
+    example_mli = f"""(* {safe_module_name}.mli - Example OCaml interface *)
 
 val greet : string -> string
 (** Greet someone by name *)
@@ -43,10 +48,10 @@ val greet : string -> string
 val add : int -> int -> int
 (** Add two integers *)
 """
-    (project_path / "src" / f"{name}.mli").write_text(example_mli, encoding="utf-8")
+    (project_path / "src" / f"{safe_module_name}.mli").write_text(example_mli, encoding="utf-8")
 
-    # Create example .ml implementation
-    example_ml = f"""(* {name}.ml - Example implementation *)
+    # Create example .ml implementation (using sanitized name)
+    example_ml = f"""(* {safe_module_name}.ml - Example implementation *)
 
 let greet name =
   "Hello, " ^ name ^ "!"
@@ -59,7 +64,7 @@ let () =
   Callback.register "greet" greet;
   Callback.register "add" add
 """
-    (project_path / "src" / f"{name}.ml").write_text(example_ml, encoding="utf-8")
+    (project_path / "src" / f"{safe_module_name}.ml").write_text(example_ml, encoding="utf-8")
 
     # Create README
     readme_content = generate_readme(name, target_langs)
@@ -119,13 +124,13 @@ generated/
             "README.md",
             "Makefile",
             ".gitignore",
-            f"src/{name}.mli",
-            f"src/{name}.ml",
+            f"src/{safe_module_name}.mli",
+            f"src/{safe_module_name}.ml",
         ],
     }
 
 
-def generate_config(name: str, target_langs: List[str]) -> str:
+def generate_config(name: str, safe_module_name: str, target_langs: List[str]) -> str:
     """Generate polyglot.toml configuration file."""
     # Generate [[targets]] array entries
     targets_str = "\n".join(
@@ -143,7 +148,8 @@ description = "FFI bindings for {name}"
 [source]
 language = "ocaml"
 dir = "src"
-files = ["{name}.mli"]
+files = ["{safe_module_name}.mli"]
+# libraries = ["str", "unix"]  # Uncomment and add OCaml libraries if needed
 
 {targets_str}
 [build]

@@ -138,7 +138,7 @@ This installs in "editable" mode with development dependencies.
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.5.0
+# Output: polyglot-ffi, version 0.5.1
 ```
 
 ### Check Help
@@ -206,7 +206,7 @@ pip install --upgrade polyglot-ffi
 To upgrade to a specific version:
 
 ```bash
-pip install --upgrade polyglot-ffi==0.5.0
+pip install --upgrade polyglot-ffi==0.5.1
 ```
 
 ### Check Current Version

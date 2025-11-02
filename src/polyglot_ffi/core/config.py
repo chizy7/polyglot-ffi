@@ -37,6 +37,9 @@ class SourceConfig(BaseModel):
     files: List[str] = Field(default_factory=list, description="Source files to process")
     dir: Optional[str] = Field(None, description="Source directory")
     exclude: List[str] = Field(default_factory=list, description="Files to exclude")
+    libraries: List[str] = Field(
+        default_factory=list, description="OCaml libraries to link (e.g., ['str', 'unix'])"
+    )
 
     @field_validator("language")
     @classmethod
@@ -140,28 +143,64 @@ def load_config(config_path: Path) -> PolyglotConfig:
         with open(config_path, "rb") as f:
             raw_config = tomllib.load(f)
     except Exception as e:
+        error_msg = str(e)
+
+        # Build context-specific suggestions
+        suggestions = []
+        if "Expected ']'" in error_msg:
+            suggestions.append("Table names must be enclosed in square brackets")
+            suggestions.append("Check that all opening brackets have matching closing brackets")
+            suggestions.append("Example: \\[project] or \\[\\[targets]]")
+        elif "Expected '\"'" in error_msg or "quote" in error_msg.lower():
+            suggestions.append('String values must be quoted: name = "value"')
+            suggestions.append("Use single quotes for literal strings: path = 'C:\\Windows'")
+        elif "Expected '='" in error_msg:
+            suggestions.append("Key-value pairs must use '=': key = \"value\"")
+        else:
+            suggestions.append("Check TOML syntax at https://toml.io/en/")
+            suggestions.append("Ensure proper quoting of strings")
+            suggestions.append("Verify array and table syntax")
+
         raise ConfigurationError(
-            message=f"Failed to parse TOML: {e}",
+            message=f"TOML syntax error: {e}",
             config_path=config_path,
-            suggestions=[
-                "Check TOML syntax at https://toml.io/en/",
-                "Ensure proper quoting of strings",
-                "Verify array and table syntax",
-            ],
+            suggestions=suggestions,
         )
 
     try:
         config = PolyglotConfig(**raw_config)
         return config
     except Exception as e:
+        # Parse pydantic error to extract field info
+        error_msg = str(e)
+
+        # Build helpful suggestions based on the error
+        suggestions = []
+
+        # Check if it's a missing field error
+        if "Field required" in error_msg or "missing" in error_msg.lower():
+            suggestions.append("Add the required section to your polyglot.toml")
+            suggestions.append(
+                "Required sections: 'project' (with name field), 'source' (with language), 'targets' (array)"
+            )
+            suggestions.append("Example: See the template created by 'polyglot-ffi init'")
+        # Check if it's an unsupported language error
+        elif "Unsupported target language" in error_msg:
+            suggestions.append("Currently supported target languages: python, rust, c")
+            suggestions.append("Note: Only Python is fully implemented at this time")
+            suggestions.append("Check the roadmap at: https://github.com/chizy7/polyglot-ffi")
+        elif "Unsupported source language" in error_msg:
+            suggestions.append("Currently supported source language: ocaml")
+            suggestions.append("Other source languages may be added in future releases")
+        else:
+            suggestions.append("Verify field names and types in polyglot.toml")
+            suggestions.append("Check for typos in section names")
+            suggestions.append("See docs/configuration.md for examples")
+
         raise ConfigurationError(
             message=f"Invalid configuration: {e}",
             config_path=config_path,
-            suggestions=[
-                "Check required fields: [project], [source], [[targets]]",
-                "Verify field names and types",
-                "See docs/configuration.md for examples",
-            ],
+            suggestions=suggestions,
         )
 
 

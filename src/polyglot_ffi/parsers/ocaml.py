@@ -273,8 +273,10 @@ class OCamlParser:
             func = self._parse_signature(full_sig.strip(), start_line)
             return func, doc, lines_consumed
         except ParseError as e:
-            # Re-raise with line info
-            raise ParseError(str(e), start_line)
+            # Re-raise with line info (avoid duplicating if already has line info)
+            if e.context.line:
+                raise  # Already has line info, just re-raise
+            raise ParseError(e.message, line=start_line)
 
     def _parse_signature(self, sig: str, line_num: int) -> IRFunction:
         """
@@ -285,7 +287,14 @@ class OCamlParser:
         # Match: val function_name : type_signature
         match = re.match(r"val\s+(\w+)\s*:\s*(.+)", sig)
         if not match:
-            raise ParseError(f"Invalid function signature: {sig}", line_num)
+            raise ParseError(
+                f"Invalid function signature: {sig}",
+                line=line_num,
+                suggestions=[
+                    "Function signatures must be in format: val name : type -> type -> ...",
+                    "Check for missing '->' between parameter types",
+                ],
+            )
 
         name = match.group(1)
         type_sig = match.group(2).strip()

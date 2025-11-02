@@ -192,9 +192,15 @@ Proper memory management:
 - **Build System Improvements** - Threading support, reduced warnings
 - **All Type Tests Working** - Complete Python FFI integration across all types
 
+### Current Release (v0.5.1)
+
+- Enhanced test coverage (71% coverage, 364 tests, 20 modules at 100%)
+- Comprehensive edge case testing
+- Improved test organization and maintainability
+- All core modules fully tested
+
 ### Previous Release (v0.4.0)
 
-- Comprehensive test suite (75% coverage, 262 tests)
 - Shell completions (Bash, Zsh, Fish)
 - Rich error messages with suggestions
 - CLI with progress indicators

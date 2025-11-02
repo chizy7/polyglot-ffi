@@ -48,10 +48,11 @@ class TestCtypesGeneratorEdgeCases:
         )
 
         result = gen.generate_function_description(module)
-        # Option types should be represented as ptr in OCaml ctypes
-        assert "ptr" in result
+        # String option types are represented as nullable strings (not ptr string)
+        # because string is already a pointer (char*) in C
         assert "process_optional" in result
         assert "ml_process_optional" in result
+        assert "string" in result
 
     def test_list_type_generation(self):
         """Test generating ctypes for list types."""

@@ -88,10 +88,18 @@ class PythonGenerator:
         for func in module.functions:
             lines.append(f"# Configure {func.name}")
 
-            # Set argtypes
-            if func.params:
-                argtypes = [self._get_ctypes(p.type) for p in func.params]
+            # Set argtypes (filter out unit parameters - they don't appear in C signatures)
+            non_unit_params = [p for p in func.params if p.type.name != "unit"]
+            if non_unit_params:
+                argtypes = []
+                for p in non_unit_params:
+                    argtypes.append(self._get_ctypes(p.type))
+                    # For list types, add a length parameter (ctypes.c_int)
+                    if p.type.kind == TypeKind.LIST:
+                        argtypes.append("ctypes.c_int")
                 lines.append(f"_lib.ml_{func.name}.argtypes = [{', '.join(argtypes)}]")
+            else:
+                lines.append(f"_lib.ml_{func.name}.argtypes = []")
 
             # Set restype
             restype = self._get_ctypes(func.return_type)
@@ -111,8 +119,9 @@ class PythonGenerator:
         """Generate Python wrapper for a single function."""
         lines = []
 
-        # Function signature
-        params = [f"{p.name}: {self._get_py_type(p.type)}" for p in func.params]
+        # Function signature (filter out unit parameters from Python signature)
+        non_unit_params = [p for p in func.params if p.type.name != "unit"]
+        params = [f"{p.name}: {self._get_py_type(p.type)}" for p in non_unit_params]
         params_str = ", ".join(params) if params else ""
         return_type = self._get_py_type(func.return_type)
 
@@ -126,10 +135,19 @@ class PythonGenerator:
 
         lines.append("    try:")
 
-        # Convert arguments
+        # Convert arguments (only non-unit parameters)
         call_args = []
-        for param in func.params:
-            if param.type.name == "string":
+        for param in non_unit_params:
+            if param.type.kind == TypeKind.LIST:
+                # Convert Python list to C array + length
+                lines.extend(self._generate_list_to_c_conversion(param))
+                call_args.append(f"{param.name}_array")
+                call_args.append(f"{param.name}_len")
+            elif param.type.kind == TypeKind.TUPLE:
+                # Convert Python tuple to C array
+                lines.extend(self._generate_tuple_to_c_conversion(param))
+                call_args.append(f"{param.name}_array")
+            elif param.type.name == "string":
                 call_args.append(f"{param.name}.encode('utf-8')")
             else:
                 call_args.append(param.name)
@@ -139,7 +157,30 @@ class PythonGenerator:
         lines.append(f"        result = _lib.ml_{func.name}({call_str})")
 
         # Handle return value
-        if func.return_type.name == "string":
+        if func.return_type.kind == TypeKind.LIST:
+            # Handle list return types - convert C array to Python list
+            lines.extend(self._generate_c_to_list_conversion(func.return_type))
+        elif func.return_type.kind == TypeKind.TUPLE:
+            # Handle tuple return types - convert C array to Python tuple
+            lines.extend(self._generate_c_to_tuple_conversion(func.return_type))
+        elif func.return_type.kind == TypeKind.OPTION:
+            # Handle option types: None = NULL pointer, Some(x) = unwrap value
+            lines.append("        # Handle option type: NULL = None, otherwise unwrap value")
+            if func.return_type.params and func.return_type.params[0].is_primitive():
+                inner_type = func.return_type.params[0]
+                if inner_type.name == "string":
+                    lines.append("        if result is None:")
+                    lines.append("            return None")
+                    lines.append("        return result.decode('utf-8')")
+                elif inner_type.name in ("int", "bool", "float"):
+                    lines.append("        if not result:")
+                    lines.append("            return None")
+                    lines.append("        return result[0]  # Dereference pointer")
+                else:
+                    lines.append("        return result if result else None")
+            else:
+                lines.append("        return result if result else None")
+        elif func.return_type.name == "string":
             lines.append("        if result is None:")
             lines.append(f'            raise {error_class}("{func.name} returned NULL")')
             lines.append("        return result.decode('utf-8')")
@@ -200,15 +241,29 @@ class PythonGenerator:
         """
         Convert IR type to ctypes type.
 
-        For complex types (options, lists, tuples, custom types),
-        we use c_void_p as they're opaque pointers from C's perspective.
+        For option types of primitives, use the appropriate pointer type.
+        For other complex types, use c_void_p as they're opaque pointers.
         """
         if ir_type.is_primitive():
             return self.CTYPES_MAP.get(ir_type.name, "ctypes.c_char_p")
 
-        # Complex types are passed as opaque pointers (v0.2.0+)
+        # Handle option types - they become nullable pointers
+        if ir_type.kind == TypeKind.OPTION:
+            if ir_type.params and ir_type.params[0].is_primitive():
+                inner_type = ir_type.params[0]
+                if inner_type.name == "string":
+                    return "ctypes.c_char_p"  # Nullable string
+                elif inner_type.name == "int":
+                    return "ctypes.POINTER(ctypes.c_int)"  # Pointer to int
+                elif inner_type.name == "float":
+                    return "ctypes.POINTER(ctypes.c_double)"  # Pointer to double
+                elif inner_type.name == "bool":
+                    return "ctypes.POINTER(ctypes.c_bool)"  # Pointer to bool
+            # For option of complex types, use void*
+            return "ctypes.c_void_p"
+
+        # Other complex types are passed as opaque pointers
         if ir_type.kind in (
-            TypeKind.OPTION,
             TypeKind.LIST,
             TypeKind.TUPLE,
             TypeKind.CUSTOM,
@@ -218,3 +273,271 @@ class PythonGenerator:
             return "ctypes.c_void_p"
 
         raise ValueError(f"Unsupported type for ctypes: {ir_type}")
+
+    def _generate_list_to_c_conversion(self, param: "IRParameter") -> list:
+        """Generate code to convert Python list to C array + length."""
+        lines = []
+        param_name = param.name
+
+        if not param.type.params:
+            # No element type info
+            return lines
+
+        element_type = param.type.params[0]
+
+        # Special case: nested list (e.g., List[List[int]])
+        if (
+            element_type.kind == TypeKind.LIST
+            and element_type.params
+            and element_type.params[0].is_primitive()
+        ):
+            return self._generate_nested_list_to_c_conversion(param, element_type)
+
+        if not element_type.is_primitive():
+            # For other complex element types, not implemented yet
+            return lines
+
+        lines.append(f"        # Convert Python list to C array")
+        lines.append(f"        {param_name}_len = len({param_name})")
+
+        # Convert list to ctypes array
+        if element_type.name == "string":
+            lines.append(
+                f"        {param_name}_encoded = [s.encode('utf-8') for s in {param_name}]"
+            )
+            lines.append(
+                f"        {param_name}_array = (ctypes.c_char_p * {param_name}_len)(*{param_name}_encoded)"
+            )
+        elif element_type.name == "int":
+            lines.append(
+                f"        {param_name}_array = (ctypes.c_int * {param_name}_len)(*{param_name})"
+            )
+        elif element_type.name == "float":
+            lines.append(
+                f"        {param_name}_array = (ctypes.c_double * {param_name}_len)(*{param_name})"
+            )
+        elif element_type.name == "bool":
+            lines.append(
+                f"        {param_name}_array = (ctypes.c_bool * {param_name}_len)(*{param_name})"
+            )
+
+        return lines
+
+    def _generate_nested_list_to_c_conversion(
+        self, param: "IRParameter", inner_list_type: IRType
+    ) -> list:
+        """Generate code to convert Python nested list (List[List[T]]) to C array of arrays."""
+        lines = []
+        param_name = param.name
+
+        if not inner_list_type.params or not inner_list_type.params[0].is_primitive():
+            # Only support primitive inner types
+            return lines
+
+        inner_element_type = inner_list_type.params[0]
+
+        lines.append(f"        # Convert Python nested list to C array of arrays")
+        lines.append(f"        {param_name}_len = len({param_name})")
+        lines.append(f"        {param_name}_array = (ctypes.c_void_p * {param_name}_len)()")
+        lines.append(f"        for i, inner_list in enumerate({param_name}):")
+        lines.append(f"            inner_len = len(inner_list)")
+        lines.append(f"            # Create [length, array_ptr] pair for each inner list")
+        lines.append(f"            inner_pair = (ctypes.c_void_p * 2)()")
+        lines.append(f"            inner_pair[0] = ctypes.c_void_p(inner_len)")
+
+        # Convert inner list based on type
+        if inner_element_type.name == "string":
+            lines.append(f"            inner_encoded = [s.encode('utf-8') for s in inner_list]")
+            lines.append(f"            inner_arr = (ctypes.c_char_p * inner_len)(*inner_encoded)")
+        elif inner_element_type.name == "int":
+            lines.append(f"            inner_arr = (ctypes.c_int * inner_len)(*inner_list)")
+        elif inner_element_type.name == "float":
+            lines.append(f"            inner_arr = (ctypes.c_double * inner_len)(*inner_list)")
+        elif inner_element_type.name == "bool":
+            lines.append(f"            inner_arr = (ctypes.c_bool * inner_len)(*inner_list)")
+
+        lines.append(f"            inner_pair[1] = ctypes.cast(inner_arr, ctypes.c_void_p)")
+        lines.append(
+            f"            {param_name}_array[i] = ctypes.cast(inner_pair, ctypes.c_void_p)"
+        )
+
+        return lines
+
+    def _generate_c_to_list_conversion(self, return_type: IRType) -> list:
+        """Generate code to convert C array + length to Python list."""
+        lines = []
+
+        if not return_type.params:
+            # No element type specified
+            lines.append("        return result")
+            return lines
+
+        element_type = return_type.params[0]
+
+        # Handle lists of tuples
+        if element_type.kind == TypeKind.TUPLE:
+            return self._generate_c_to_list_of_tuples_conversion(element_type)
+
+        # For other complex element types, not implemented yet
+        if not element_type.is_primitive():
+            lines.append("        return result")
+            return lines
+
+        lines.append("        # Convert C array to Python list")
+        lines.append("        if not result:")
+        lines.append("            return []")
+        lines.append("        # Result is [length, array_ptr] - both as void*")
+        lines.append("        result_ptr = ctypes.cast(result, ctypes.POINTER(ctypes.c_void_p))")
+        lines.append("        # Length is stored as intptr_t, cast back to int")
+        lines.append("        list_len = ctypes.cast(result_ptr[0], ctypes.c_void_p).value or 0")
+        lines.append("        if list_len == 0:")
+        lines.append("            return []")
+        lines.append("        array_ptr = result_ptr[1]")
+
+        # Cast to appropriate array type and convert to Python list
+        if element_type.name == "string":
+            lines.append("        array = ctypes.cast(array_ptr, ctypes.POINTER(ctypes.c_char_p))")
+            lines.append("        return [array[i].decode('utf-8') for i in range(list_len)]")
+        elif element_type.name == "int":
+            lines.append("        array = ctypes.cast(array_ptr, ctypes.POINTER(ctypes.c_int))")
+            lines.append("        return [array[i] for i in range(list_len)]")
+        elif element_type.name == "float":
+            lines.append("        array = ctypes.cast(array_ptr, ctypes.POINTER(ctypes.c_double))")
+            lines.append("        return [array[i] for i in range(list_len)]")
+        elif element_type.name == "bool":
+            lines.append("        array = ctypes.cast(array_ptr, ctypes.POINTER(ctypes.c_bool))")
+            lines.append("        return [bool(array[i]) for i in range(list_len)]")
+
+        return lines
+
+    def _generate_c_to_list_of_tuples_conversion(self, tuple_type: IRType) -> list:
+        """Generate code to convert C array of tuples to Python list of tuples."""
+        lines = []
+
+        if not tuple_type.params or not all(p.is_primitive() for p in tuple_type.params):
+            # For complex tuple elements, not implemented yet
+            lines.append("        return result")
+            return lines
+
+        tuple_size = len(tuple_type.params)
+
+        lines.append("        # Convert C array of tuples to Python list")
+        lines.append("        if not result:")
+        lines.append("            return []")
+        lines.append("        # Result is [length, tuple_array] - both as void*")
+        lines.append("        result_ptr = ctypes.cast(result, ctypes.POINTER(ctypes.c_void_p))")
+        lines.append("        # Length is stored as intptr_t, cast back to int")
+        lines.append("        list_len = ctypes.cast(result_ptr[0], ctypes.c_void_p).value or 0")
+        lines.append("        if list_len == 0:")
+        lines.append("            return []")
+        lines.append("        tuple_array_ptr = result_ptr[1]")
+        lines.append("        # Cast to array of void** (each tuple is a void**)")
+        lines.append(
+            "        tuple_array = ctypes.cast(tuple_array_ptr, ctypes.POINTER(ctypes.c_void_p))"
+        )
+        lines.append("        ")
+        lines.append("        # Convert each tuple")
+        lines.append("        python_list = []")
+        lines.append("        for i in range(list_len):")
+        lines.append(
+            "            tuple_ptr = ctypes.cast(tuple_array[i], ctypes.POINTER(ctypes.c_void_p))"
+        )
+        lines.append("            elements = []")
+
+        # Convert each element of the tuple
+        for j, elem_type in enumerate(tuple_type.params):
+            if elem_type.name == "string":
+                lines.append(
+                    f"            elem_{j} = ctypes.cast(tuple_ptr[{j}], ctypes.c_char_p).value.decode('utf-8')"
+                )
+            elif elem_type.name == "int":
+                lines.append(
+                    f"            elem_{j} = int(ctypes.cast(tuple_ptr[{j}], ctypes.c_void_p).value)"
+                )
+            elif elem_type.name == "float":
+                lines.append(
+                    f"            elem_{j} = ctypes.cast(tuple_ptr[{j}], ctypes.POINTER(ctypes.c_double)).contents.value"
+                )
+            elif elem_type.name == "bool":
+                lines.append(
+                    f"            elem_{j} = bool(int(ctypes.cast(tuple_ptr[{j}], ctypes.c_void_p).value))"
+                )
+
+            lines.append(f"            elements.append(elem_{j})")
+
+        lines.append("            python_list.append(tuple(elements))")
+        lines.append("        return python_list")
+
+        return lines
+
+    def _generate_tuple_to_c_conversion(self, param: "IRParameter") -> list:
+        """Generate code to convert Python tuple to C array (void**)."""
+        lines = []
+        param_name = param.name
+
+        if not param.type.params or not all(p.is_primitive() for p in param.type.params):
+            # For complex element types, not implemented yet
+            return lines
+
+        tuple_size = len(param.type.params)
+
+        lines.append(f"        # Convert Python tuple to C array")
+        lines.append(f"        {param_name}_array = (ctypes.c_void_p * {tuple_size})()")
+
+        for i, elem_type in enumerate(param.type.params):
+            if elem_type.name == "string":
+                lines.append(
+                    f"        {param_name}_array[{i}] = ctypes.cast(ctypes.c_char_p({param_name}[{i}].encode('utf-8')), ctypes.c_void_p)"
+                )
+            elif elem_type.name == "int":
+                lines.append(
+                    f"        {param_name}_array[{i}] = ctypes.c_void_p({param_name}[{i}])"
+                )
+            elif elem_type.name == "float":
+                lines.append(f"        {param_name}_float_{i} = ctypes.c_double({param_name}[{i}])")
+                lines.append(
+                    f"        {param_name}_array[{i}] = ctypes.cast(ctypes.pointer({param_name}_float_{i}), ctypes.c_void_p)"
+                )
+            elif elem_type.name == "bool":
+                lines.append(
+                    f"        {param_name}_array[{i}] = ctypes.c_void_p(int({param_name}[{i}]))"
+                )
+
+        return lines
+
+    def _generate_c_to_tuple_conversion(self, return_type: IRType) -> list:
+        """Generate code to convert C array (void**) to Python tuple."""
+        lines = []
+
+        if not return_type.params or not all(p.is_primitive() for p in return_type.params):
+            # For complex element types, not implemented yet
+            lines.append("        return result")
+            return lines
+
+        tuple_size = len(return_type.params)
+
+        lines.append("        # Convert C array to Python tuple")
+        lines.append("        if not result:")
+        lines.append("            return " + str(tuple(None for _ in range(tuple_size))))
+        lines.append("        result_arr = ctypes.cast(result, ctypes.POINTER(ctypes.c_void_p))")
+        lines.append("        elements = []")
+
+        for i, elem_type in enumerate(return_type.params):
+            if elem_type.name == "string":
+                lines.append(
+                    f"        elem_{i} = ctypes.cast(result_arr[{i}], ctypes.c_char_p).value.decode('utf-8')"
+                )
+            elif elem_type.name == "int":
+                lines.append(f"        elem_{i} = int(result_arr[{i}])")
+            elif elem_type.name == "float":
+                lines.append(
+                    f"        elem_{i} = ctypes.cast(result_arr[{i}], ctypes.POINTER(ctypes.c_double)).contents.value"
+                )
+            elif elem_type.name == "bool":
+                lines.append(f"        elem_{i} = bool(int(result_arr[{i}]))")
+
+            lines.append(f"        elements.append(elem_{i})")
+
+        lines.append("        return tuple(elements)")
+
+        return lines

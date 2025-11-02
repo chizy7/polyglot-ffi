@@ -386,7 +386,7 @@ If you need to deploy manually:
 mkdocs gh-deploy
 
 # With custom commit message
-mkdocs gh-deploy -m "Update documentation for v0.5.0"
+mkdocs gh-deploy -m "Update documentation for v0.5.1"
 
 # Force push (use with caution)
 mkdocs gh-deploy --force

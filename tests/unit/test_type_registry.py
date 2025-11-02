@@ -554,6 +554,59 @@ class TestCachingAndEdgeCases:
         ir_type = ir_primitive("unknown_type")
         assert registry.validate(ir_type, "python") is False
 
+    def test_option_unsupported_language_raises_error(self):
+        """Test option type with unsupported language raises error."""
+        registry = TypeRegistry()
+        # Register primitives for javascript but don't support option types
+        registry.register_primitive("int", {"javascript": "number"})
+
+        ir_type = ir_option(ir_primitive("int"))
+        # Should error because javascript doesn't support option types
+        with pytest.raises(TypeMappingError) as exc_info:
+            registry.get_mapping(ir_type, "javascript")
+        assert "No option type support for javascript" in str(exc_info.value)
+
+    def test_list_unsupported_language_raises_error(self):
+        """Test list type with unsupported language raises error."""
+        registry = TypeRegistry()
+        # Register primitives for javascript but don't support list types
+        registry.register_primitive("int", {"javascript": "number"})
+
+        ir_type = ir_list(ir_primitive("int"))
+        # Should error because javascript doesn't support list types
+        with pytest.raises(TypeMappingError) as exc_info:
+            registry.get_mapping(ir_type, "javascript")
+        assert "No list type support for javascript" in str(exc_info.value)
+
+    def test_tuple_unsupported_language_raises_error(self):
+        """Test tuple type with unsupported language raises error."""
+        registry = TypeRegistry()
+        # Register primitives for javascript but don't support tuple types
+        registry.register_primitive("int", {"javascript": "number"})
+        registry.register_primitive("string", {"javascript": "string"})
+
+        ir_type = ir_tuple(ir_primitive("int"), ir_primitive("string"))
+        # Should error because javascript doesn't support tuple types
+        with pytest.raises(TypeMappingError) as exc_info:
+            registry.get_mapping(ir_type, "javascript")
+        assert "No tuple type support for javascript" in str(exc_info.value)
+
+    def test_unsupported_type_kind_raises_error(self):
+        """Test that unsupported type kind raises error."""
+        registry = TypeRegistry()
+        # Create a mock IRType with an unsupported kind
+        from unittest.mock import Mock
+
+        mock_type = Mock(spec=IRType)
+        mock_type.kind = Mock()
+        mock_type.kind.name = "UNSUPPORTED"
+        mock_type.name = "mock_type"
+        mock_type.params = None
+
+        with pytest.raises(TypeMappingError) as exc_info:
+            registry.get_mapping(mock_type, "python")
+        assert "Unsupported type kind" in str(exc_info.value)
+
 
 class TestDefaultRegistry:
     """Test default global registry."""

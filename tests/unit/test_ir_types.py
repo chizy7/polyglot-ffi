@@ -412,3 +412,189 @@ class TestComplexIRTypes:
         assert len(variant.variants) == 3
         assert variant.variants["Success"].name == "string"
         assert variant.variants["Pending"] is None
+
+
+class TestIRFunctionArity:
+    """Test IRFunction arity property."""
+
+    def test_function_arity_zero(self):
+        """Test arity of function with no parameters."""
+        func = IRFunction(name="test", params=[], return_type=UNIT)
+        assert func.arity == 0
+
+    def test_function_arity_one(self):
+        """Test arity of function with one parameter."""
+        param = IRParameter(name="x", type=INT)
+        func = IRFunction(name="test", params=[param], return_type=INT)
+        assert func.arity == 1
+
+    def test_function_arity_three(self):
+        """Test arity of function with three parameters."""
+        params = [
+            IRParameter(name="x", type=INT),
+            IRParameter(name="y", type=INT),
+            IRParameter(name="z", type=INT),
+        ]
+        func = IRFunction(name="test", params=params, return_type=INT)
+        assert func.arity == 3
+
+
+class TestIRTypeDefinitionStr:
+    """Test IRTypeDefinition __str__ method."""
+
+    def test_variant_type_str(self):
+        """Test variant type string representation."""
+        from polyglot_ffi.ir.types import IRTypeDefinition
+
+        # Variant with payload
+        variants = {
+            "Ok": STRING,
+            "Error": INT,
+        }
+        typedef = IRTypeDefinition(name="result", kind=TypeKind.VARIANT, variants=variants)
+        result = str(typedef)
+        assert "type result" in result
+        assert "Ok" in result
+        assert "Error" in result
+
+    def test_variant_type_without_payload(self):
+        """Test variant type without payload."""
+        from polyglot_ffi.ir.types import IRTypeDefinition
+
+        variants = {
+            "None": None,
+            "Some": STRING,
+        }
+        typedef = IRTypeDefinition(name="option", kind=TypeKind.VARIANT, variants=variants)
+        result = str(typedef)
+        assert "type option" in result
+        assert "|" in result
+
+    def test_custom_type_str_fallback(self):
+        """Test custom type string representation fallback."""
+        from polyglot_ffi.ir.types import IRTypeDefinition
+
+        # Custom type (not record or variant)
+        typedef = IRTypeDefinition(
+            name="custom",
+            kind=TypeKind.CUSTOM,
+        )
+        result = str(typedef)
+        assert "type custom" in result
+
+
+class TestIRModuleLookup:
+    """Test IRModule lookup methods."""
+
+    def test_get_function_found(self):
+        """Test finding a function by name."""
+        func1 = IRFunction(name="foo", params=[], return_type=INT)
+        func2 = IRFunction(name="bar", params=[], return_type=STRING)
+        module = IRModule(name="test", functions=[func1, func2], type_definitions=[])
+
+        found = module.get_function("foo")
+        assert found is not None
+        assert found.name == "foo"
+        assert found.return_type.name == "int"
+
+    def test_get_function_not_found(self):
+        """Test looking for non-existent function."""
+        func = IRFunction(name="foo", params=[], return_type=INT)
+        module = IRModule(name="test", functions=[func], type_definitions=[])
+
+        found = module.get_function("nonexistent")
+        assert found is None
+
+    def test_get_type_found(self):
+        """Test finding a type definition by name."""
+        from polyglot_ffi.ir.types import IRTypeDefinition
+
+        typedef1 = IRTypeDefinition(name="user", kind=TypeKind.RECORD)
+        typedef2 = IRTypeDefinition(name="status", kind=TypeKind.VARIANT)
+        module = IRModule(name="test", functions=[], type_definitions=[typedef1, typedef2])
+
+        found = module.get_type("user")
+        assert found is not None
+        assert found.name == "user"
+
+    def test_get_type_not_found(self):
+        """Test looking for non-existent type definition."""
+        from polyglot_ffi.ir.types import IRTypeDefinition
+
+        typedef = IRTypeDefinition(name="user", kind=TypeKind.RECORD)
+        module = IRModule(name="test", functions=[], type_definitions=[typedef])
+
+        found = module.get_type("nonexistent")
+        assert found is None
+
+
+class TestHelperFunctions:
+    """Test helper functions for creating IR types."""
+
+    def test_ir_primitive_helper(self):
+        """Test ir_primitive helper function."""
+        from polyglot_ffi.ir.types import ir_primitive
+
+        t = ir_primitive("int")
+        assert t.kind == TypeKind.PRIMITIVE
+        assert t.name == "int"
+
+    def test_ir_option_helper(self):
+        """Test ir_option helper function."""
+        from polyglot_ffi.ir.types import ir_option, ir_primitive
+
+        t = ir_option(ir_primitive("string"))
+        assert t.kind == TypeKind.OPTION
+        assert t.params[0].name == "string"
+
+    def test_ir_list_helper(self):
+        """Test ir_list helper function."""
+        from polyglot_ffi.ir.types import ir_list, ir_primitive
+
+        t = ir_list(ir_primitive("int"))
+        assert t.kind == TypeKind.LIST
+        assert t.params[0].name == "int"
+
+    def test_ir_tuple_helper(self):
+        """Test ir_tuple helper function."""
+        from polyglot_ffi.ir.types import ir_tuple, ir_primitive
+
+        t = ir_tuple(ir_primitive("int"), ir_primitive("string"))
+        assert t.kind == TypeKind.TUPLE
+        assert len(t.params) == 2
+
+
+class TestIRTypeStrFallback:
+    """Test IRType __str__ fallback."""
+
+    def test_custom_type_str(self):
+        """Test custom type string representation."""
+        # Custom type (not primitive, option, list, tuple, record, or variant)
+        t = IRType(kind=TypeKind.CUSTOM, name="MyCustom")
+        assert str(t) == "MyCustom"
+
+    def test_function_type_str(self):
+        """Test function type string representation."""
+        # Function type uses the fallback
+        t = IRType(kind=TypeKind.FUNCTION, name="func")
+        assert str(t) == "func"
+
+
+class TestIRTypeDefinitionRecordStr:
+    """Test IRTypeDefinition record __str__ method."""
+
+    def test_record_with_fields_str(self):
+        """Test record with fields string representation."""
+        from polyglot_ffi.ir.types import IRTypeDefinition
+
+        fields = {
+            "name": STRING,
+            "age": INT,
+        }
+        typedef = IRTypeDefinition(name="person", kind=TypeKind.RECORD, fields=fields)
+        result = str(typedef)
+        assert "type person" in result
+        assert "{" in result
+        assert "}" in result
+        assert "name:" in result or "name :" in result
+        assert "age:" in result or "age :" in result

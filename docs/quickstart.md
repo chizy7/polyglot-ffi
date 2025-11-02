@@ -22,7 +22,7 @@ pip install -e ".[dev]"
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.5.0
+# Output: polyglot-ffi, version 0.5.1
 ```
 
 ## Your First Project
@@ -140,6 +140,19 @@ dune build
 ```
 
 **Important:** When copying source files with hyphens in their names, rename them to use underscores (e.g., `my-crypto-lib.ml` → `my_crypto_lib.ml`). This ensures compatibility with OCaml's module naming requirements.
+
+**Using OCaml Standard Libraries:**
+If your OCaml code uses libraries like `Str`, `Unix`, or `Thread`, specify them in your `polyglot.toml`:
+
+```toml
+[source]
+language = "ocaml"
+dir = "src"
+files = ["my_crypto_lib.mli"]
+libraries = ["str", "unix"]  # Add libraries your code uses
+```
+
+See [Configuration Guide](configuration.md#using-ocaml-standard-libraries) for more details.
 
 ### Step 6: Use from Python
 
@@ -414,4 +427,4 @@ See [Installation Guide](installation.md#upgrading) for more options.
 
 **Ready to eliminate FFI boilerplate?** Let's build something amazing!
 
-**Version:** 0.5.0 | **Documentation:** https://polyglotffi.com/
+**Version:** 0.5.1 | **Documentation:** https://polyglotffi.com/

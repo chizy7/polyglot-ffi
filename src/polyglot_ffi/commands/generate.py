@@ -13,6 +13,29 @@ from polyglot_ffi.parsers.ocaml import parse_mli_file, ParseError
 from polyglot_ffi.utils.naming import sanitize_module_name
 
 
+def _write_file_with_error_handling(file_path: Path, content: str) -> None:
+    """Write content to file with better error handling for permissions."""
+    try:
+        file_path.write_text(content)
+    except PermissionError as e:
+        raise PermissionError(
+            f"Permission denied: Cannot write to '{file_path.parent}'.\n"
+            f"  Suggestions:\n"
+            f"  • Check directory permissions: chmod 755 {file_path.parent}\n"
+            f"  • Ensure you have write access to the directory\n"
+            f"  • Try running with appropriate permissions"
+        ) from e
+    except OSError as e:
+        # Handle other OS errors (disk full, etc.)
+        raise OSError(
+            f"Cannot write to '{file_path}': {e}\n"
+            f"  Suggestions:\n"
+            f"  • Check if the disk has enough space\n"
+            f"  • Verify the path is correct\n"
+            f"  • Ensure the parent directory exists"
+        ) from e
+
+
 def generate_bindings(
     source_file: Optional[str],
     output_dir: Optional[str],
@@ -21,6 +44,7 @@ def generate_bindings(
     dry_run: bool,
     force: bool,
     verbose: bool,
+    ocaml_libraries: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Generate FFI bindings from a source file.
@@ -33,6 +57,7 @@ def generate_bindings(
         dry_run: If True, don't write files
         force: If True, regenerate even if files exist
         verbose: Enable verbose output
+        ocaml_libraries: Additional OCaml libraries to link (e.g., ['str', 'unix'])
 
     Returns:
         Dictionary with generation results
@@ -43,7 +68,25 @@ def generate_bindings(
 
     source_path = Path(source_file)
     if not source_path.exists():
-        raise FileNotFoundError(f"Source file not found: {source_file}")
+        # Provide helpful error message with suggestions
+        abs_path = source_path.resolve()
+        parent_dir = source_path.parent
+
+        suggestions = []
+        suggestions.append(f"Check if the path is correct: {abs_path}")
+
+        if not parent_dir.exists():
+            suggestions.append(f"Create the directory: mkdir -p {parent_dir}")
+
+        suggestions.append("Verify the 'dir' and 'files' settings in polyglot.toml")
+        suggestions.append("Use an absolute path or ensure working directory is correct")
+
+        error_msg = f"Source file not found: {source_file}\n"
+        error_msg += "  Suggestions:\n"
+        for suggestion in suggestions:
+            error_msg += f"  • {suggestion}\n"
+
+        raise FileNotFoundError(error_msg.rstrip())
 
     # Determine module name
     if not module_name:
@@ -79,8 +122,18 @@ def generate_bindings(
             )
 
     # Create output directory
+    output_exists = output_path.exists()
     if not dry_run:
         output_path.mkdir(parents=True, exist_ok=True)
+
+    # Warn if output directory already exists and has files
+    if output_exists and not force and verbose:
+        existing_files = list(output_path.glob("*"))
+        if existing_files:
+            print(
+                f"Warning: Output directory '{output_path}' already exists with {len(existing_files)} file(s)."
+            )
+            print(f"  Existing files may be overwritten. Use --force to suppress this warning.")
 
     generated_files = []
 
@@ -93,8 +146,8 @@ def generate_bindings(
     func_desc = ctypes_gen.generate_function_description(ir_module)
 
     if not dry_run:
-        (output_path / "type_description.ml").write_text(type_desc)
-        (output_path / "function_description.ml").write_text(func_desc)
+        _write_file_with_error_handling(output_path / "type_description.ml", type_desc)
+        _write_file_with_error_handling(output_path / "function_description.ml", func_desc)
 
     generated_files.extend(
         [str(output_path / "type_description.ml"), str(output_path / "function_description.ml")]
@@ -109,8 +162,8 @@ def generate_bindings(
     c_header = c_stub_gen.generate_header(ir_module, safe_module_name)
 
     if not dry_run:
-        (output_path / f"{safe_module_name}_stubs.c").write_text(c_stubs)
-        (output_path / f"{safe_module_name}_stubs.h").write_text(c_header)
+        _write_file_with_error_handling(output_path / f"{safe_module_name}_stubs.c", c_stubs)
+        _write_file_with_error_handling(output_path / f"{safe_module_name}_stubs.h", c_header)
 
     generated_files.extend(
         [
@@ -124,12 +177,12 @@ def generate_bindings(
         print("Generating Dune configuration...")
 
     dune_gen = DuneGenerator()
-    dune_config = dune_gen.generate_dune(safe_module_name)
+    dune_config = dune_gen.generate_dune(safe_module_name, ocaml_libraries)
     dune_project = dune_gen.generate_dune_project(safe_module_name)
 
     if not dry_run:
-        (output_path / "dune").write_text(dune_config)
-        (output_path / "dune-project").write_text(dune_project)
+        _write_file_with_error_handling(output_path / "dune", dune_config)
+        _write_file_with_error_handling(output_path / "dune-project", dune_project)
 
     generated_files.extend([str(output_path / "dune"), str(output_path / "dune-project")])
 
@@ -142,7 +195,9 @@ def generate_bindings(
         python_wrapper = python_gen.generate(ir_module, safe_module_name)
 
         if not dry_run:
-            (output_path / f"{safe_module_name}_py.py").write_text(python_wrapper)
+            _write_file_with_error_handling(
+                output_path / f"{safe_module_name}_py.py", python_wrapper
+            )
 
         generated_files.append(str(output_path / f"{safe_module_name}_py.py"))
 
