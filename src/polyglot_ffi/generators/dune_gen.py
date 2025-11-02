@@ -2,19 +2,21 @@
 Dune build system configuration generator.
 """
 
+from typing import List, Optional
+
 from polyglot_ffi.utils.naming import sanitize_module_name
 
 
 class DuneGenerator:
     """Generate Dune build configuration files."""
 
-    def _format_packages(self, ocaml_libraries: list = None) -> str:
+    def _format_packages(self, ocaml_libraries: Optional[List[str]] = None) -> str:
         """Format additional packages for ocamlfind -package flag."""
         if not ocaml_libraries:
             return ""
         return "," + ",".join(ocaml_libraries)
 
-    def _get_library_link_flags(self, ocaml_libraries: list = None) -> str:
+    def _get_library_link_flags(self, ocaml_libraries: Optional[List[str]] = None) -> str:
         """Get linker flags for OCaml libraries with C dependencies."""
         if not ocaml_libraries:
             return ""
@@ -34,7 +36,7 @@ class DuneGenerator:
 
         return " " + " ".join(flags) if flags else ""
 
-    def generate_dune(self, module_name: str, ocaml_libraries: list = None) -> str:
+    def generate_dune(self, module_name: str, ocaml_libraries: Optional[List[str]] = None) -> str:
         """Generate dune file for the bindings library.
 
         Args:

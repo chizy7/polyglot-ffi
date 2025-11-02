@@ -53,6 +53,63 @@ class CStubGenerator:
             "    }",
             "}",
             "",
+            "/* Memory cleanup functions */",
+            "",
+            "/* Free option type results (int*, double*, etc.) */",
+            "void ml_free_option(void* ptr) {",
+            "    if (ptr) {",
+            "        free(ptr);",
+            "    }",
+            "}",
+            "",
+            "/* Free list results returned by ml_* functions */",
+            "/* For primitive lists (int, float, bool), just frees the structure */",
+            "void ml_free_list_result(void* result) {",
+            "    if (result) {",
+            "        void** res_array = (void**)result;",
+            "        if (res_array[1]) {",
+            "            free(res_array[1]);  // Free array",
+            "        }",
+            "        free(result);  // Free result struct",
+            "    }",
+            "}",
+            "",
+            "/* For string lists, frees each string and the structure */",
+            "void ml_free_string_list_result(void* result) {",
+            "    if (result) {",
+            "        void** res_array = (void**)result;",
+            "        int len = (int)(intptr_t)res_array[0];",
+            "        if (res_array[1]) {",
+            "            const char** str_array = (const char**)res_array[1];",
+            "            for (int i = 0; i < len; i++) {",
+            "                if (str_array[i]) {",
+            "                    free((void*)str_array[i]);  // Free each string",
+            "                }",
+            "            }",
+            "            free(str_array);  // Free array",
+            "        }",
+            "        free(result);  // Free result struct",
+            "    }",
+            "}",
+            "",
+            "/* For tuple lists, frees each tuple and the structure */",
+            "void ml_free_tuple_list_result(void* result) {",
+            "    if (result) {",
+            "        void** res_array = (void**)result;",
+            "        int len = (int)(intptr_t)res_array[0];",
+            "        if (res_array[1]) {",
+            "            void** tuple_array = (void**)res_array[1];",
+            "            for (int i = 0; i < len; i++) {",
+            "                if (tuple_array[i]) {",
+            "                    free(tuple_array[i]);  // Free each tuple",
+            "                }",
+            "            }",
+            "            free(tuple_array);  // Free array",
+            "        }",
+            "        free(result);  // Free result struct",
+            "    }",
+            "}",
+            "",
         ]
 
         for func in module.functions:
@@ -95,6 +152,22 @@ class CStubGenerator:
                 params = "void"
             lines.append(f"{c_return} ml_{func.name}({params});")
 
+        lines.append("")
+        lines.append("/* Memory cleanup functions */")
+        lines.append("/* NOTE: Caller must free returned pointers for option and list types */")
+        lines.append("")
+        lines.append("/* Free option type results (int*, double*, etc.) */")
+        lines.append("void ml_free_option(void* ptr);")
+        lines.append("")
+        lines.append("/* Free list results returned by ml_* functions */")
+        lines.append("/* For primitive lists (int, float, bool), just frees the structure */")
+        lines.append("void ml_free_list_result(void* result);")
+        lines.append("")
+        lines.append("/* For string lists, frees each string and the structure */")
+        lines.append("void ml_free_string_list_result(void* result);")
+        lines.append("")
+        lines.append("/* For tuple lists, frees each tuple and the structure */")
+        lines.append("void ml_free_tuple_list_result(void* result);")
         lines.append("")
         lines.append(f"#endif /* {guard} */")
 
@@ -315,11 +388,11 @@ class CStubGenerator:
             lines.append(f"    int* {param_name}_arr = (int*){param_name};")
 
         # Build OCaml list from C array in reverse order (for efficiency)
+        lines.append(f"    CAMLlocal1(cons);")
         lines.append(f"    ml_{param_name} = Val_emptylist;  /* Start with empty list */")
         lines.append(f"    for (int i = {param_name}_len - 1; i >= 0; i--) {{")
 
         # Create cons cell
-        lines.append(f"        CAMLlocal1(cons);")
         lines.append(f"        cons = caml_alloc(2, 0);  /* Allocate cons cell */")
 
         # Convert and store the element
@@ -358,6 +431,9 @@ class CStubGenerator:
 
         lines.append(f"    /* Convert C nested list to OCaml list list */")
         lines.append(f"    void*** {param_name}_arr = (void***){param_name};")
+        lines.append(f"    CAMLlocal1(inner_list);")
+        lines.append(f"    CAMLlocal1(inner_cons);")
+        lines.append(f"    CAMLlocal1(outer_cons);")
         lines.append(f"    ml_{param_name} = Val_emptylist;  /* Start with empty list */")
         lines.append(f"    for (int i = {param_name}_len - 1; i >= 0; i--) {{")
         lines.append(f"        /* Each element is [length, array_ptr] */")
@@ -375,10 +451,8 @@ class CStubGenerator:
             lines.append(f"        int* inner_arr = (int*)inner_pair[1];")
 
         # Build inner OCaml list
-        lines.append(f"        CAMLlocal1(inner_list);")
         lines.append(f"        inner_list = Val_emptylist;")
         lines.append(f"        for (int j = inner_len - 1; j >= 0; j--) {{")
-        lines.append(f"            CAMLlocal1(inner_cons);")
         lines.append(f"            inner_cons = caml_alloc(2, 0);")
 
         # Store element based on type
@@ -396,7 +470,6 @@ class CStubGenerator:
         lines.append(f"        }}")
 
         # Add inner list to outer list
-        lines.append(f"        CAMLlocal1(outer_cons);")
         lines.append(f"        outer_cons = caml_alloc(2, 0);")
         lines.append(f"        Store_field(outer_cons, 0, inner_list);")
         lines.append(f"        Store_field(outer_cons, 1, ml_{param_name});")
@@ -430,8 +503,6 @@ class CStubGenerator:
             lines.append(f"    void* result = (void*)ml_result;")
             lines.append(f"    CAMLreturnT(void*, result);")
             return lines
-
-        c_elem_type = self.C_TYPE_MAP.get(element_type.name, "void*")
 
         # First pass: count list length
         lines.append(f"    /* Convert OCaml list to C array */")

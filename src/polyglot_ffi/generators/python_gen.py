@@ -78,6 +78,16 @@ class PythonGenerator:
             "_lib.ml_init.restype = None",
             "_lib.ml_init()",
             "",
+            "# Configure memory cleanup functions",
+            "_lib.ml_free_option.argtypes = [ctypes.c_void_p]",
+            "_lib.ml_free_option.restype = None",
+            "_lib.ml_free_list_result.argtypes = [ctypes.c_void_p]",
+            "_lib.ml_free_list_result.restype = None",
+            "_lib.ml_free_string_list_result.argtypes = [ctypes.c_void_p]",
+            "_lib.ml_free_string_list_result.restype = None",
+            "_lib.ml_free_tuple_list_result.argtypes = [ctypes.c_void_p]",
+            "_lib.ml_free_tuple_list_result.restype = None",
+            "",
             f"class {error_class}(Exception):",
             f'    """Raised when {module_name} operations fail"""',
             "    pass",
@@ -171,11 +181,17 @@ class PythonGenerator:
                 if inner_type.name == "string":
                     lines.append("        if result is None:")
                     lines.append("            return None")
-                    lines.append("        return result.decode('utf-8')")
+                    lines.append("        value = result.decode('utf-8')")
+                    lines.append("        # Clean up C-allocated string")
+                    lines.append("        _lib.ml_free_option(result)")
+                    lines.append("        return value")
                 elif inner_type.name in ("int", "bool", "float"):
-                    lines.append("        if not result:")
+                    lines.append("        if result is None:")
                     lines.append("            return None")
-                    lines.append("        return result[0]  # Dereference pointer")
+                    lines.append("        value = result[0]  # Dereference pointer")
+                    lines.append("        # Clean up C-allocated memory")
+                    lines.append("        _lib.ml_free_option(result)")
+                    lines.append("        return value")
                 else:
                     lines.append("        return result if result else None")
             else:
@@ -398,16 +414,30 @@ class PythonGenerator:
         # Cast to appropriate array type and convert to Python list
         if element_type.name == "string":
             lines.append("        array = ctypes.cast(array_ptr, ctypes.POINTER(ctypes.c_char_p))")
-            lines.append("        return [array[i].decode('utf-8') for i in range(list_len)]")
+            lines.append(
+                "        python_list = [array[i].decode('utf-8') for i in range(list_len)]"
+            )
+            lines.append("        # Clean up C-allocated memory (strings + array + result)")
+            lines.append("        _lib.ml_free_string_list_result(result)")
+            lines.append("        return python_list")
         elif element_type.name == "int":
             lines.append("        array = ctypes.cast(array_ptr, ctypes.POINTER(ctypes.c_int))")
-            lines.append("        return [array[i] for i in range(list_len)]")
+            lines.append("        python_list = [array[i] for i in range(list_len)]")
+            lines.append("        # Clean up C-allocated memory")
+            lines.append("        _lib.ml_free_list_result(result)")
+            lines.append("        return python_list")
         elif element_type.name == "float":
             lines.append("        array = ctypes.cast(array_ptr, ctypes.POINTER(ctypes.c_double))")
-            lines.append("        return [array[i] for i in range(list_len)]")
+            lines.append("        python_list = [array[i] for i in range(list_len)]")
+            lines.append("        # Clean up C-allocated memory")
+            lines.append("        _lib.ml_free_list_result(result)")
+            lines.append("        return python_list")
         elif element_type.name == "bool":
             lines.append("        array = ctypes.cast(array_ptr, ctypes.POINTER(ctypes.c_bool))")
-            lines.append("        return [bool(array[i]) for i in range(list_len)]")
+            lines.append("        python_list = [bool(array[i]) for i in range(list_len)]")
+            lines.append("        # Clean up C-allocated memory")
+            lines.append("        _lib.ml_free_list_result(result)")
+            lines.append("        return python_list")
 
         return lines
 
@@ -469,6 +499,10 @@ class PythonGenerator:
             lines.append(f"            elements.append(elem_{j})")
 
         lines.append("            python_list.append(tuple(elements))")
+        lines.append("        ")
+        lines.append("        # Clean up C-allocated memory")
+        lines.append("        _lib.ml_free_tuple_list_result(result)")
+        lines.append("        ")
         lines.append("        return python_list")
 
         return lines
