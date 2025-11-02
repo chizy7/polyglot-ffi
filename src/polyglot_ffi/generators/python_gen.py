@@ -11,7 +11,7 @@ Generates Python wrapper code with support for:
 
 from typing import Dict
 
-from polyglot_ffi.ir.types import IRModule, IRType, IRFunction, TypeKind
+from polyglot_ffi.ir.types import IRFunction, IRModule, IRParameter, IRType, TypeKind
 from polyglot_ffi.utils.naming import sanitize_module_name
 
 
@@ -297,7 +297,7 @@ class PythonGenerator:
             # For other complex element types, not implemented yet
             return lines
 
-        lines.append(f"        # Convert Python list to C array")
+        lines.append("        # Convert Python list to C array")
         lines.append(f"        {param_name}_len = len({param_name})")
 
         # Convert list to ctypes array
@@ -306,7 +306,8 @@ class PythonGenerator:
                 f"        {param_name}_encoded = [s.encode('utf-8') for s in {param_name}]"
             )
             lines.append(
-                f"        {param_name}_array = (ctypes.c_char_p * {param_name}_len)(*{param_name}_encoded)"
+                f"        {param_name}_array = (ctypes.c_char_p * {param_name}_len)"
+                f"(*{param_name}_encoded)"
             )
         elif element_type.name == "int":
             lines.append(
@@ -336,27 +337,27 @@ class PythonGenerator:
 
         inner_element_type = inner_list_type.params[0]
 
-        lines.append(f"        # Convert Python nested list to C array of arrays")
+        lines.append("        # Convert Python nested list to C array of arrays")
         lines.append(f"        {param_name}_len = len({param_name})")
         lines.append(f"        {param_name}_array = (ctypes.c_void_p * {param_name}_len)()")
         lines.append(f"        for i, inner_list in enumerate({param_name}):")
-        lines.append(f"            inner_len = len(inner_list)")
-        lines.append(f"            # Create [length, array_ptr] pair for each inner list")
-        lines.append(f"            inner_pair = (ctypes.c_void_p * 2)()")
-        lines.append(f"            inner_pair[0] = ctypes.c_void_p(inner_len)")
+        lines.append("            inner_len = len(inner_list)")
+        lines.append("            # Create [length, array_ptr] pair for each inner list")
+        lines.append("            inner_pair = (ctypes.c_void_p * 2)()")
+        lines.append("            inner_pair[0] = ctypes.c_void_p(inner_len)")
 
         # Convert inner list based on type
         if inner_element_type.name == "string":
-            lines.append(f"            inner_encoded = [s.encode('utf-8') for s in inner_list]")
-            lines.append(f"            inner_arr = (ctypes.c_char_p * inner_len)(*inner_encoded)")
+            lines.append("            inner_encoded = [s.encode('utf-8') for s in inner_list]")
+            lines.append("            inner_arr = (ctypes.c_char_p * inner_len)(*inner_encoded)")
         elif inner_element_type.name == "int":
-            lines.append(f"            inner_arr = (ctypes.c_int * inner_len)(*inner_list)")
+            lines.append("            inner_arr = (ctypes.c_int * inner_len)(*inner_list)")
         elif inner_element_type.name == "float":
-            lines.append(f"            inner_arr = (ctypes.c_double * inner_len)(*inner_list)")
+            lines.append("            inner_arr = (ctypes.c_double * inner_len)(*inner_list)")
         elif inner_element_type.name == "bool":
-            lines.append(f"            inner_arr = (ctypes.c_bool * inner_len)(*inner_list)")
+            lines.append("            inner_arr = (ctypes.c_bool * inner_len)(*inner_list)")
 
-        lines.append(f"            inner_pair[1] = ctypes.cast(inner_arr, ctypes.c_void_p)")
+        lines.append("            inner_pair[1] = ctypes.cast(inner_arr, ctypes.c_void_p)")
         lines.append(
             f"            {param_name}_array[i] = ctypes.cast(inner_pair, ctypes.c_void_p)"
         )
@@ -419,8 +420,6 @@ class PythonGenerator:
             lines.append("        return result")
             return lines
 
-        tuple_size = len(tuple_type.params)
-
         lines.append("        # Convert C array of tuples to Python list")
         lines.append("        if not result:")
         lines.append("            return []")
@@ -448,19 +447,23 @@ class PythonGenerator:
         for j, elem_type in enumerate(tuple_type.params):
             if elem_type.name == "string":
                 lines.append(
-                    f"            elem_{j} = ctypes.cast(tuple_ptr[{j}], ctypes.c_char_p).value.decode('utf-8')"
+                    f"            elem_{j} = ctypes.cast(tuple_ptr[{j}], "
+                    f"ctypes.c_char_p).value.decode('utf-8')"
                 )
             elif elem_type.name == "int":
                 lines.append(
-                    f"            elem_{j} = int(ctypes.cast(tuple_ptr[{j}], ctypes.c_void_p).value)"
+                    f"            elem_{j} = int(ctypes.cast(tuple_ptr[{j}], "
+                    f"ctypes.c_void_p).value)"
                 )
             elif elem_type.name == "float":
                 lines.append(
-                    f"            elem_{j} = ctypes.cast(tuple_ptr[{j}], ctypes.POINTER(ctypes.c_double)).contents.value"
+                    f"            elem_{j} = ctypes.cast(tuple_ptr[{j}], "
+                    f"ctypes.POINTER(ctypes.c_double)).contents.value"
                 )
             elif elem_type.name == "bool":
                 lines.append(
-                    f"            elem_{j} = bool(int(ctypes.cast(tuple_ptr[{j}], ctypes.c_void_p).value))"
+                    f"            elem_{j} = bool(int(ctypes.cast(tuple_ptr[{j}], "
+                    f"ctypes.c_void_p).value))"
                 )
 
             lines.append(f"            elements.append(elem_{j})")
@@ -481,13 +484,14 @@ class PythonGenerator:
 
         tuple_size = len(param.type.params)
 
-        lines.append(f"        # Convert Python tuple to C array")
+        lines.append("        # Convert Python tuple to C array")
         lines.append(f"        {param_name}_array = (ctypes.c_void_p * {tuple_size})()")
 
         for i, elem_type in enumerate(param.type.params):
             if elem_type.name == "string":
                 lines.append(
-                    f"        {param_name}_array[{i}] = ctypes.cast(ctypes.c_char_p({param_name}[{i}].encode('utf-8')), ctypes.c_void_p)"
+                    f"        {param_name}_array[{i}] = ctypes.cast("
+                    f"ctypes.c_char_p({param_name}[{i}].encode('utf-8')), ctypes.c_void_p)"
                 )
             elif elem_type.name == "int":
                 lines.append(
@@ -496,7 +500,8 @@ class PythonGenerator:
             elif elem_type.name == "float":
                 lines.append(f"        {param_name}_float_{i} = ctypes.c_double({param_name}[{i}])")
                 lines.append(
-                    f"        {param_name}_array[{i}] = ctypes.cast(ctypes.pointer({param_name}_float_{i}), ctypes.c_void_p)"
+                    f"        {param_name}_array[{i}] = ctypes.cast("
+                    f"ctypes.pointer({param_name}_float_{i}), ctypes.c_void_p)"
                 )
             elif elem_type.name == "bool":
                 lines.append(
@@ -525,13 +530,15 @@ class PythonGenerator:
         for i, elem_type in enumerate(return_type.params):
             if elem_type.name == "string":
                 lines.append(
-                    f"        elem_{i} = ctypes.cast(result_arr[{i}], ctypes.c_char_p).value.decode('utf-8')"
+                    f"        elem_{i} = ctypes.cast(result_arr[{i}], "
+                    f"ctypes.c_char_p).value.decode('utf-8')"
                 )
             elif elem_type.name == "int":
                 lines.append(f"        elem_{i} = int(result_arr[{i}])")
             elif elem_type.name == "float":
                 lines.append(
-                    f"        elem_{i} = ctypes.cast(result_arr[{i}], ctypes.POINTER(ctypes.c_double)).contents.value"
+                    f"        elem_{i} = ctypes.cast(result_arr[{i}], "
+                    f"ctypes.POINTER(ctypes.c_double)).contents.value"
                 )
             elif elem_type.name == "bool":
                 lines.append(f"        elem_{i} = bool(int(result_arr[{i}]))")

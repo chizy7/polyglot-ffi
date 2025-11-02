@@ -2,6 +2,7 @@
 Unit tests for configuration module.
 """
 
+import sys
 import tempfile
 from pathlib import Path
 import pytest
@@ -277,6 +278,10 @@ output_dir = "out"
 class TestPythonVersionCompatibility:
     """Test Python version compatibility for tomli import."""
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 9),
+        reason="Pydantic reload incompatible with Python 3.8 (requires GenericAlias)",
+    )
     def test_tomli_import_on_old_python(self, monkeypatch):
         """Test tomli import path for Python < 3.11."""
         import sys
