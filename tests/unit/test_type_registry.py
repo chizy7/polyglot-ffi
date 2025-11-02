@@ -428,13 +428,26 @@ class TestCachingAndEdgeCases:
         assert result == "Option<i64>"
 
     def test_option_unsupported_lang(self):
-        """Test option type with unsupported language."""
-        registry = TypeRegistry()
-        register_builtin_types(registry)
+        """Test option type with unsupported languages (parameterized)."""
 
-        ir_type = ir_option(ir_primitive("int"))
-        with pytest.raises(TypeMappingError, match="No go mapping"):
-            registry.get_mapping(ir_type, "go")
+        # Consolidated test: ensure primitive exists for the target lang so
+        # the Option-handler's unsupported-language error is raised.
+        @pytest.mark.parametrize("unsupported_lang", ["go", "javascript"])
+        def _run(unsupported_lang):
+            registry = TypeRegistry()
+            # register the primitive for the target language so we reach the
+            # option-handling branch rather than failing on primitive lookup
+            registry.register_primitive(
+                "int", {unsupported_lang: "int" if unsupported_lang == "go" else "number"}
+            )
+
+            ir_type = ir_option(ir_primitive("int"))
+            with pytest.raises(TypeMappingError) as exc_info:
+                registry.get_mapping(ir_type, unsupported_lang)
+            assert f"No option type support for {unsupported_lang}" in str(exc_info.value)
+
+        _run("go")
+        _run("javascript")
 
     def test_list_c_mapping(self):
         """Test list type maps to pointer in C."""
@@ -464,13 +477,22 @@ class TestCachingAndEdgeCases:
         assert result == "Vec<i64>"
 
     def test_list_unsupported_lang(self):
-        """Test list type with unsupported language."""
-        registry = TypeRegistry()
-        register_builtin_types(registry)
+        """Test list type with unsupported languages (parameterized)."""
 
-        ir_type = ir_list(ir_primitive("int"))
-        with pytest.raises(TypeMappingError, match="No go mapping"):
-            registry.get_mapping(ir_type, "go")
+        @pytest.mark.parametrize("unsupported_lang", ["go", "javascript"])
+        def _run(unsupported_lang):
+            registry = TypeRegistry()
+            registry.register_primitive(
+                "int", {unsupported_lang: "int" if unsupported_lang == "go" else "number"}
+            )
+
+            ir_type = ir_list(ir_primitive("int"))
+            with pytest.raises(TypeMappingError) as exc_info:
+                registry.get_mapping(ir_type, unsupported_lang)
+            assert f"No list type support for {unsupported_lang}" in str(exc_info.value)
+
+        _run("go")
+        _run("javascript")
 
     def test_tuple_c_mapping(self):
         """Test tuple type in C (placeholder)."""
@@ -500,13 +522,23 @@ class TestCachingAndEdgeCases:
         assert result == "(i64, String)"
 
     def test_tuple_unsupported_lang(self):
-        """Test tuple type with unsupported language."""
-        registry = TypeRegistry()
-        register_builtin_types(registry)
+        """Test tuple type with unsupported languages (parameterized)."""
 
-        ir_type = ir_tuple(ir_primitive("int"), ir_primitive("string"))
-        with pytest.raises(TypeMappingError, match="No go mapping"):
-            registry.get_mapping(ir_type, "go")
+        @pytest.mark.parametrize("unsupported_lang", ["go", "javascript"])
+        def _run(unsupported_lang):
+            registry = TypeRegistry()
+            registry.register_primitive(
+                "int", {unsupported_lang: "int" if unsupported_lang == "go" else "number"}
+            )
+            registry.register_primitive("string", {unsupported_lang: "string"})
+
+            ir_type = ir_tuple(ir_primitive("int"), ir_primitive("string"))
+            with pytest.raises(TypeMappingError) as exc_info:
+                registry.get_mapping(ir_type, unsupported_lang)
+            assert f"No tuple type support for {unsupported_lang}" in str(exc_info.value)
+
+        _run("go")
+        _run("javascript")
 
     def test_custom_type_rust(self):
         """Test custom type in Rust (title case)."""
@@ -553,6 +585,22 @@ class TestCachingAndEdgeCases:
 
         ir_type = ir_primitive("unknown_type")
         assert registry.validate(ir_type, "python") is False
+
+    def test_unsupported_type_kind_raises_error(self):
+        """Test that unsupported type kind raises error."""
+        registry = TypeRegistry()
+        # Create a mock IRType with an unsupported kind
+        from unittest.mock import Mock
+
+        mock_type = Mock(spec=IRType)
+        mock_type.kind = Mock()
+        mock_type.kind.name = "UNSUPPORTED"
+        mock_type.name = "mock_type"
+        mock_type.params = None
+
+        with pytest.raises(TypeMappingError) as exc_info:
+            registry.get_mapping(mock_type, "python")
+        assert "Unsupported type kind" in str(exc_info.value)
 
 
 class TestDefaultRegistry:

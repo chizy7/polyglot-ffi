@@ -72,6 +72,92 @@ class TestCtypesGenerator:
         assert "let add =" in result
         assert "int @-> int @-> returning int" in result
 
+    def test_option_type_mapping(self):
+        """Test option type mapping in ctypes."""
+        from polyglot_ffi.ir.types import ir_option, ir_primitive
+
+        gen = CtypesGenerator()
+
+        # String option should just be string (already a pointer)
+        string_option = ir_option(ir_primitive("string"))
+        assert gen._get_ctype(string_option) == "string"
+
+        # Int option should be ptr int
+        int_option = ir_option(ir_primitive("int"))
+        assert gen._get_ctype(int_option) == "(ptr int)"
+
+    def test_list_type_mapping(self):
+        """Test list type mapping in ctypes."""
+        from polyglot_ffi.ir.types import ir_list, ir_primitive
+
+        gen = CtypesGenerator()
+
+        int_list = ir_list(ir_primitive("int"))
+        assert gen._get_ctype(int_list) == "(ptr void)"
+
+    def test_list_parameter_adds_length(self):
+        """Test that list parameters add length parameter."""
+        from polyglot_ffi.ir.types import ir_list, ir_primitive
+
+        gen = CtypesGenerator()
+
+        # Create module with list parameter
+        func = IRFunction(
+            name="process_list",
+            params=[IRParameter(name="items", type=ir_list(ir_primitive("int")))],
+            return_type=INT,
+        )
+        module = IRModule(name="test", functions=[func], type_definitions=[])
+
+        result = gen.generate_function_description(module)
+        # Should have list pointer and length parameter
+        assert "(ptr void) @-> int @-> returning int" in result
+
+    def test_tuple_type_mapping(self):
+        """Test tuple type mapping in ctypes."""
+        from polyglot_ffi.ir.types import ir_tuple, ir_primitive
+
+        gen = CtypesGenerator()
+
+        pair = ir_tuple(ir_primitive("int"), ir_primitive("string"))
+        assert gen._get_ctype(pair) == "(ptr void)"
+
+    def test_custom_type_mapping(self):
+        """Test custom type mapping in ctypes."""
+        from polyglot_ffi.ir.types import IRType, TypeKind
+
+        gen = CtypesGenerator()
+
+        custom = IRType(kind=TypeKind.CUSTOM, name="MyType")
+        assert gen._get_ctype(custom) == "(ptr void)"
+
+    def test_option_without_params(self):
+        """Test option type without parameters."""
+        from polyglot_ffi.ir.types import IRType, TypeKind
+
+        gen = CtypesGenerator()
+
+        # Option without params should return (ptr void)
+        empty_option = IRType(kind=TypeKind.OPTION, name="option", params=None)
+        assert gen._get_ctype(empty_option) == "(ptr void)"
+
+    def test_unsupported_type_raises_error(self):
+        """Test that unsupported type kinds raise ValueError."""
+        from unittest.mock import Mock
+
+        gen = CtypesGenerator()
+
+        # Create a mock IRType with unsupported kind
+        mock_type = Mock()
+        mock_type.is_primitive.return_value = False
+        mock_type.kind = Mock()
+        mock_type.kind.name = "UNSUPPORTED"
+        mock_type.name = "unknown"
+
+        with pytest.raises(ValueError) as exc_info:
+            gen._get_ctype(mock_type)
+        assert "Unsupported type for Ctypes generation" in str(exc_info.value)
+
 
 class TestCStubGenerator:
     """Test C stub generator."""
@@ -144,10 +230,57 @@ class TestDuneGenerator:
 
         assert "(library" in result
         assert "(name example_bindings)" in result
-        assert "(libraries ctypes ctypes.foreign)" in result
+        assert "(libraries ctypes)" in result
+        # ctypes.foreign is used via -package in ocamlfind, not in library list
         assert "(ctypes" in result
         assert "example_stubs.h" in result
         assert "(preamble" in result
+
+    def test_generate_dune_with_libraries(self):
+        """Test generating dune file with OCaml libraries."""
+        gen = DuneGenerator()
+        result = gen.generate_dune("example", ["str", "unix"])
+
+        assert "(library" in result
+        assert "(libraries ctypes str unix)" in result
+        assert "-lcamlstr" in result
+        assert "-lunix" in result
+
+    def test_generate_dune_with_unknown_library(self):
+        """Test generating dune file with unknown library (no linker flags)."""
+        gen = DuneGenerator()
+        result = gen.generate_dune("example", ["custom_lib"])
+
+        assert "(libraries ctypes custom_lib)" in result
+        # Unknown library won't have linker flags
+        assert "-lcamlcustom_lib" not in result
+
+    def test_format_packages_empty(self):
+        """Test formatting packages with no libraries."""
+        gen = DuneGenerator()
+        result = gen._format_packages(None)
+        assert result == ""
+
+        result = gen._format_packages([])
+        assert result == ""
+
+    def test_format_packages_with_libraries(self):
+        """Test formatting packages with libraries."""
+        gen = DuneGenerator()
+        result = gen._format_packages(["str", "unix"])
+        assert result == ",str,unix"
+
+    def test_get_library_link_flags_empty(self):
+        """Test getting linker flags with no libraries."""
+        gen = DuneGenerator()
+        result = gen._get_library_link_flags(None)
+        assert result == ""
+
+    def test_get_library_link_flags_with_known_libs(self):
+        """Test getting linker flags for known libraries."""
+        gen = DuneGenerator()
+        result = gen._get_library_link_flags(["str"])
+        assert "-lcamlstr" in result
 
     def test_generate_dune_project(self):
         """Test generating dune-project file."""

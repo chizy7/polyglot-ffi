@@ -85,6 +85,9 @@ class PolyglotFFIError(Exception):
                 if self.context.column:
                     location += f":{self.context.column}"
             parts.append(f"  in {location}")
+        elif self.context.line:
+            # Line number without file path
+            parts.append(f"  at line {self.context.line}")
         if self.suggestions:
             parts.append("Suggestions:")
             for suggestion in self.suggestions:

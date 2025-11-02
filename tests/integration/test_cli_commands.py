@@ -197,6 +197,44 @@ language = "invalid_lang"
         # Output should exist
         assert captured.out
 
+    def test_check_project_with_missing_dependencies(
+        self, temp_dir, valid_config_file, monkeypatch, mocker
+    ):
+        """Test check with missing dependencies."""
+        monkeypatch.chdir(temp_dir)
+
+        # Mock check_dependencies to return some missing deps
+        mocker.patch(
+            "polyglot_ffi.commands.check.check_dependencies",
+            return_value={"ocaml": False, "dune": False, "python3": True},
+        )
+
+        results = check_project(check_deps=True)
+
+        assert results["config_valid"]
+        # Should have warning about missing dependencies
+        assert any("Missing dependencies" in w for w in results["warnings"])
+
+    def test_display_check_results_warnings_only(
+        self, temp_dir, valid_config_file, monkeypatch, capsys
+    ):
+        """Test displaying check results with warnings but no errors."""
+        monkeypatch.chdir(temp_dir)
+
+        # Create results with warnings but no errors
+        results = {
+            "config_valid": True,
+            "warnings": ["Warning 1", "Warning 2"],
+            "errors": [],
+            "dependencies": {},
+        }
+
+        display_check_results(results)
+
+        captured = capsys.readouterr()
+        # Should show warnings
+        assert "Warning" in captured.out or "⚠" in captured.out
+
 
 class TestCleanCommand:
     """Test the clean command."""
@@ -366,6 +404,41 @@ enabled = true
 
         # Directory might be cleaned
         assert count >= 0
+
+    def test_clean_files_permission_error(self, generated_files_dir, capsys, mocker):
+        """Test cleaning files when permission error occurs."""
+        # Create a test file
+        test_file = generated_files_dir / "test_stubs.c"
+        test_file.write_text("test")
+
+        # Mock unlink to raise PermissionError
+        mocker.patch.object(Path, "unlink", side_effect=PermissionError("Permission denied"))
+        mocker.patch.object(Path, "is_dir", return_value=False)
+
+        files_to_clean = {test_file}
+        count = clean_files(files_to_clean, dry_run=False)
+
+        # Should not count the file as cleaned
+        assert count == 0
+
+        # Should print error message
+        captured = capsys.readouterr()
+        assert "Failed to remove" in captured.out
+        assert "Permission denied" in captured.out
+
+    def test_clean_project_invalid_config(self, temp_dir, monkeypatch):
+        """Test clean project with invalid config file."""
+        monkeypatch.chdir(temp_dir)
+
+        # Create invalid config
+        config_path = temp_dir / "polyglot.toml"
+        config_path.write_text("[project]\nname = invalid syntax [[[")
+
+        # Should still work, falling back to default directory
+        count = clean_project(all_files=False, dry_run=False)
+
+        # Should succeed (no files to clean but no error)
+        assert count == 0
 
 
 class TestWatchCommand:
@@ -606,7 +679,7 @@ language = "python"
         with pytest.raises(ConfigurationError) as exc_info:
             load_config(invalid_toml)
 
-        assert "parse TOML" in str(exc_info.value)
+        assert "TOML syntax error" in str(exc_info.value)
 
     def test_load_config_invalid_schema(self, temp_dir):
         """Test loading config with invalid schema."""

@@ -13,6 +13,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.5.1] - 2025-11-02
+
+### Added
+- **OCaml Library Support:**
+  - Support for additional OCaml libraries in build system (e.g., `str`, `unix`, `threads`)
+  - `libraries` field in `[source]` config section for specifying OCaml dependencies
+  - Automatic linker flags for known OCaml C libraries
+  - Enhanced Dune generator with library linking support
+
+- **Improved Error Messages:**
+  - Context-specific suggestions for TOML syntax errors
+  - Detailed error messages for missing fields and invalid configurations
+  - Better error handling in OCaml parser with line numbers
+  - Helpful suggestions for common configuration mistakes
+
+- **Test Coverage Improvements:**
+  - Added 56 new tests (total: 364 tests, all passing)
+  - Achieved 100% coverage for 20 core modules
+  - Created new unit test files for better organization:
+    - `tests/unit/test_naming.py` - 11 tests for naming utilities
+    - `tests/unit/test_config.py` - 15 tests for configuration module
+  - Enhanced existing test suites with 30+ additional edge case tests
+
+### Changed
+- **Build System:**
+  - Removed `ctypes.foreign` from library list (only used via `-package` flag)
+  - Cleaner dune configuration with proper library dependencies
+  - Eliminates "directory clash" warning for ctypes
+
+- **Type Generation:**
+  - Fixed string option handling in ctypes generator (string options now correctly nullable)
+  - Added parentheses wrapping for complex ctypes expressions for correct parsing
+  - List parameters now automatically add length parameter in function signatures
+
+- **Configuration:**
+  - Enhanced TOML error parsing with specific suggestions
+  - Better validation error messages with actionable advice
+  - Support for OCaml library specification in source config
+
+### Fixed
+- **Ctypes Generator:**
+  - Fixed string option types (now `string` instead of `ptr string`)
+  - Fixed type wrapping with parentheses for proper ctypes parsing
+  - Added missing length parameter for list types in function signatures
+  - Corrected option type handling for primitives vs pointers
+
+- **Error Handling:**
+  - Fixed duplicate line info in parser error messages
+  - Improved error message formatting with proper context
+  - Better suggestions for configuration errors
+
+- **Test Coverage (Modules at 100%):**
+  - parsers/ocaml.py: 90% → 100%
+  - core/config.py: 84% → 98%
+  - type_system/registry.py: 96% → 100%
+  - generators/ctypes_gen.py: 95% → 100%
+  - commands/clean.py: 94% → 100%
+  - ir/types.py: 90% → 100%
+
+### Technical Details
+- **OCaml Library Integration:**
+  - Library mapping system for C dependencies (str → `-lcamlstr`, unix → `-lunix`, etc.)
+  - Package formatting for ocamlfind `-package` flag
+  - Linker flags automatically added to shared library creation
+  - Works across macOS (.dylib) and Linux (.so) builds
+
+- **Enhanced Error Messages:**
+  - Bracket mismatch suggestions for TOML table syntax
+  - Quote-related suggestions for string value errors
+  - Missing field suggestions with example configuration
+  - Unsupported language suggestions with roadmap reference
+
+- **Code Quality:**
+  - 20 modules at 100% test coverage
+  - Comprehensive edge case testing
+  - Mock-based tests for hard-to-reach error paths
+  - Improved test organization and maintainability
+
+### Quality Metrics
+- **Before:** 308 tests, 66% coverage
+- **After:** 364 tests (+56), 71% coverage (+5%)
+- **Achievement:** 20 modules at 100% coverage
+- **Test Success Rate:** 100% (364/364 passing)
+
 ## [0.5.0] - 2025-10-30
 
 ### Added
@@ -305,7 +389,8 @@ Security vulnerability fixes
 
 ---
 
-[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/chizy7/polyglot-ffi/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.1...v0.4.2

@@ -35,6 +35,8 @@ class CStubGenerator:
             f"/* {safe_name}_stubs.c */",
             "",
             "#include <string.h>",
+            "#include <stdlib.h>",
+            "#include <stdint.h>",
             "#include <caml/mlvalues.h>",
             "#include <caml/memory.h>",
             "#include <caml/alloc.h>",
@@ -48,6 +50,63 @@ class CStubGenerator:
             "        char* argv[] = {NULL};",
             "        caml_startup(argv);",
             "        _ocaml_initialized = 1;",
+            "    }",
+            "}",
+            "",
+            "/* Memory cleanup functions */",
+            "",
+            "/* Free option type results (int*, double*, etc.) */",
+            "void ml_free_option(void* ptr) {",
+            "    if (ptr) {",
+            "        free(ptr);",
+            "    }",
+            "}",
+            "",
+            "/* Free list results returned by ml_* functions */",
+            "/* For primitive lists (int, float, bool), just frees the structure */",
+            "void ml_free_list_result(void* result) {",
+            "    if (result) {",
+            "        void** res_array = (void**)result;",
+            "        if (res_array[1]) {",
+            "            free(res_array[1]);  // Free array",
+            "        }",
+            "        free(result);  // Free result struct",
+            "    }",
+            "}",
+            "",
+            "/* For string lists, frees each string and the structure */",
+            "void ml_free_string_list_result(void* result) {",
+            "    if (result) {",
+            "        void** res_array = (void**)result;",
+            "        int len = (int)(intptr_t)res_array[0];",
+            "        if (res_array[1]) {",
+            "            const char** str_array = (const char**)res_array[1];",
+            "            for (int i = 0; i < len; i++) {",
+            "                if (str_array[i]) {",
+            "                    free((void*)str_array[i]);  // Free each string",
+            "                }",
+            "            }",
+            "            free(str_array);  // Free array",
+            "        }",
+            "        free(result);  // Free result struct",
+            "    }",
+            "}",
+            "",
+            "/* For tuple lists, frees each tuple and the structure */",
+            "void ml_free_tuple_list_result(void* result) {",
+            "    if (result) {",
+            "        void** res_array = (void**)result;",
+            "        int len = (int)(intptr_t)res_array[0];",
+            "        if (res_array[1]) {",
+            "            void** tuple_array = (void**)res_array[1];",
+            "            for (int i = 0; i < len; i++) {",
+            "                if (tuple_array[i]) {",
+            "                    free(tuple_array[i]);  // Free each tuple",
+            "                }",
+            "            }",
+            "            free(tuple_array);  // Free array",
+            "        }",
+            "        free(result);  // Free result struct",
             "    }",
             "}",
             "",
@@ -79,9 +138,36 @@ class CStubGenerator:
         # Function declarations
         for func in module.functions:
             c_return = self._get_c_type(func.return_type)
-            params = ", ".join(f"{self._get_c_type(p.type)} {p.name}" for p in func.params)
+            # Filter out unit parameters - they should not appear in C signatures
+            non_unit_params = [p for p in func.params if p.type.name != "unit"]
+            if non_unit_params:
+                param_parts = []
+                for p in non_unit_params:
+                    param_parts.append(f"{self._get_c_type(p.type)} {p.name}")
+                    # For list types, add a length parameter
+                    if p.type.kind == TypeKind.LIST:
+                        param_parts.append(f"int {p.name}_len")
+                params = ", ".join(param_parts)
+            else:
+                params = "void"
             lines.append(f"{c_return} ml_{func.name}({params});")
 
+        lines.append("")
+        lines.append("/* Memory cleanup functions */")
+        lines.append("/* NOTE: Caller must free returned pointers for option and list types */")
+        lines.append("")
+        lines.append("/* Free option type results (int*, double*, etc.) */")
+        lines.append("void ml_free_option(void* ptr);")
+        lines.append("")
+        lines.append("/* Free list results returned by ml_* functions */")
+        lines.append("/* For primitive lists (int, float, bool), just frees the structure */")
+        lines.append("void ml_free_list_result(void* result);")
+        lines.append("")
+        lines.append("/* For string lists, frees each string and the structure */")
+        lines.append("void ml_free_string_list_result(void* result);")
+        lines.append("")
+        lines.append("/* For tuple lists, frees each tuple and the structure */")
+        lines.append("void ml_free_tuple_list_result(void* result);")
         lines.append("")
         lines.append(f"#endif /* {guard} */")
 
@@ -93,36 +179,53 @@ class CStubGenerator:
 
         # Function signature
         c_return = self._get_c_type(func.return_type)
-        params = ", ".join(f"{self._get_c_type(p.type)} {p.name}" for p in func.params)
+        # Filter out unit parameters - they should not appear in C signatures
+        non_unit_params = [p for p in func.params if p.type.name != "unit"]
+        if non_unit_params:
+            param_parts = []
+            for p in non_unit_params:
+                param_parts.append(f"{self._get_c_type(p.type)} {p.name}")
+                # For list types, add a length parameter
+                if p.type.kind == TypeKind.LIST:
+                    param_parts.append(f"int {p.name}_len")
+            params = ", ".join(param_parts)
+        else:
+            params = "void"
 
         lines.append(f"/* Wrapper for OCaml {func.name} function */")
         lines.append(f"{c_return} ml_{func.name}({params}) {{")
         lines.append("    CAMLparam0();")
 
-        # Declare local variables
-        num_locals = len(func.params) + 1
-        local_vars = ", ".join(f"ml_{p.name}" for p in func.params) + ", ml_result"
-        lines.append(f"    CAMLlocal{num_locals}({local_vars});")
+        # Declare local variables (only for non-unit parameters)
+        # Note: we still need ml_result
+        for param in non_unit_params:
+            lines.append(f"    CAMLlocal1(ml_{param.name});")
+        lines.append("    CAMLlocal1(ml_result);")
         lines.append("")
 
-        # Convert C parameters to OCaml values
-        for param in func.params:
+        # Convert C parameters to OCaml values (skip unit parameters)
+        for param in non_unit_params:
             lines.extend(self._convert_c_to_ocaml(param.name, param.type))
 
-        # Call OCaml function
-        if len(func.params) == 1:
-            # Single parameter
+        # Call OCaml function - use original param count to determine arity
+        if len(func.params) == 1 and func.params[0].type.name == "unit":
+            # Unit parameter - call with Val_unit
             lines.append(
-                f'    ml_result = caml_callback(*caml_named_value("{func.name}"), ml_{func.params[0].name});'
+                f'    ml_result = caml_callback(*caml_named_value("{func.name}"), Val_unit);'
             )
-        elif len(func.params) > 1:
-            # Multiple parameters
-            param_names = ", ".join(f"ml_{p.name}" for p in func.params)
+        elif len(non_unit_params) == 1:
+            # Single non-unit parameter
             lines.append(
-                f'    ml_result = caml_callback{len(func.params)}(*caml_named_value("{func.name}"), {param_names});'
+                f'    ml_result = caml_callback(*caml_named_value("{func.name}"), ml_{non_unit_params[0].name});'
+            )
+        elif len(non_unit_params) > 1:
+            # Multiple parameters
+            param_names = ", ".join(f"ml_{p.name}" for p in non_unit_params)
+            lines.append(
+                f'    ml_result = caml_callback{len(non_unit_params)}(*caml_named_value("{func.name}"), {param_names});'
             )
         else:
-            # No parameters
+            # No parameters at all (shouldn't happen, but fallback to Val_unit)
             lines.append(
                 f'    ml_result = caml_callback(*caml_named_value("{func.name}"), Val_unit);'
             )
@@ -141,7 +244,6 @@ class CStubGenerator:
         Generate code to convert C value to OCaml value.
 
         Handles primitives and complex types (options, lists, tuples, custom types).
-        Complex types are passed as opaque pointers and cast to OCaml values.
         """
         lines = []
 
@@ -156,8 +258,14 @@ class CStubGenerator:
                 lines.append(f"    ml_{param_name} = Val_bool({param_name});")
             elif param_type.name == "unit":
                 lines.append(f"    ml_{param_name} = Val_unit;")
+        elif param_type.kind == TypeKind.LIST:
+            # Handle list types - convert C array + length to OCaml list
+            lines.extend(self._convert_c_list_to_ocaml(param_name, param_type))
+        elif param_type.kind == TypeKind.TUPLE:
+            # Handle tuple types - convert C struct to OCaml tuple
+            lines.extend(self._convert_c_tuple_to_ocaml(param_name, param_type))
         else:
-            # Complex types (options, lists, tuples, custom types)
+            # Other complex types (custom types)
             # These are passed as opaque pointers and cast to value
             lines.append(f"    ml_{param_name} = (value){param_name};")
 
@@ -188,12 +296,428 @@ class CStubGenerator:
                 lines.append(f"    CAMLreturnT({c_type}, result);")
             elif return_type.name == "unit":
                 lines.append("    CAMLreturn0;")
+        elif return_type.kind == TypeKind.OPTION:
+            # Handle option types: None -> NULL, Some(x) -> unwrap and convert x
+            lines.append("    /* Handle option type: None = NULL, Some(x) = unwrap x */")
+            lines.append("    if (ml_result == Val_int(0)) {")
+            lines.append("        /* None case */")
+            lines.append(f"        CAMLreturnT({c_type}, NULL);")
+            lines.append("    } else {")
+            lines.append("        /* Some case - extract the value */")
+            lines.append("        value ml_some_value = Field(ml_result, 0);")
+
+            # Convert the inner value based on its type
+            if return_type.params and return_type.params[0].is_primitive():
+                inner_type = return_type.params[0]
+                if inner_type.name == "string":
+                    lines.append(f"        {c_type} result = strdup(String_val(ml_some_value));")
+                elif inner_type.name == "int":
+                    # For int option, we need to return a pointer to int
+                    # Allocate memory for the int value
+                    lines.append(f"        int* result = (int*)malloc(sizeof(int));")
+                    lines.append(f"        *result = Int_val(ml_some_value);")
+                elif inner_type.name == "float":
+                    lines.append(f"        double* result = (double*)malloc(sizeof(double));")
+                    lines.append(f"        *result = Double_val(ml_some_value);")
+                elif inner_type.name == "bool":
+                    lines.append(f"        int* result = (int*)malloc(sizeof(int));")
+                    lines.append(f"        *result = Bool_val(ml_some_value);")
+                else:
+                    # Default to opaque pointer
+                    lines.append(f"        {c_type} result = (void*)ml_some_value;")
+            else:
+                # For complex inner types, return as opaque pointer
+                lines.append(f"        {c_type} result = (void*)ml_some_value;")
+
+            lines.append(f"        CAMLreturnT({c_type}, result);")
+            lines.append("    }")
+        elif return_type.kind == TypeKind.LIST:
+            # Handle list return types - convert OCaml list to C array
+            lines.extend(self._convert_ocaml_list_to_c(return_type))
+        elif return_type.kind == TypeKind.TUPLE:
+            # Handle tuple return types - convert OCaml tuple to C struct
+            lines.extend(self._convert_ocaml_tuple_to_c(return_type))
         else:
-            # Complex types (options, lists, tuples, custom types)
+            # Other complex types (custom types)
             # Return as opaque pointer (cast from value)
             # Note: This keeps the value alive and GC-safe
             lines.append(f"    {c_type} result = (void*)ml_result;")
             lines.append(f"    CAMLreturnT({c_type}, result);")
+
+        return lines
+
+    def _convert_c_list_to_ocaml(self, param_name: str, param_type: IRType) -> list:
+        """
+        Generate code to convert C list (array + length) to OCaml list.
+
+        For list parameters, we expect the Python side to pass:
+        - A pointer to the array data
+        - The length of the array (passed as a separate parameter)
+        """
+        lines = []
+
+        if not param_type.params:
+            # No element type info, fall back to opaque pointer
+            lines.append(f"    ml_{param_name} = (value){param_name};")
+            return lines
+
+        element_type = param_type.params[0]
+
+        # Special case: nested list (e.g., int list list)
+        if (
+            element_type.kind == TypeKind.LIST
+            and element_type.params
+            and element_type.params[0].is_primitive()
+        ):
+            return self._convert_c_nested_list_to_ocaml(param_name, element_type)
+
+        if not element_type.is_primitive():
+            # For other complex element types, fall back to opaque pointer
+            lines.append(f"    ml_{param_name} = (value){param_name};")
+            return lines
+
+        # Cast void* to appropriate array type
+        lines.append(f"    /* Convert C array to OCaml list */")
+        if element_type.name == "string":
+            lines.append(f"    const char** {param_name}_arr = (const char**){param_name};")
+        elif element_type.name == "int":
+            lines.append(f"    int* {param_name}_arr = (int*){param_name};")
+        elif element_type.name == "float":
+            lines.append(f"    double* {param_name}_arr = (double*){param_name};")
+        elif element_type.name == "bool":
+            lines.append(f"    int* {param_name}_arr = (int*){param_name};")
+
+        # Build OCaml list from C array in reverse order (for efficiency)
+        lines.append(f"    CAMLlocal1(cons);")
+        lines.append(f"    ml_{param_name} = Val_emptylist;  /* Start with empty list */")
+        lines.append(f"    for (int i = {param_name}_len - 1; i >= 0; i--) {{")
+
+        # Create cons cell
+        lines.append(f"        cons = caml_alloc(2, 0);  /* Allocate cons cell */")
+
+        # Convert and store the element
+        if element_type.name == "string":
+            lines.append(f"        Store_field(cons, 0, caml_copy_string({param_name}_arr[i]));")
+        elif element_type.name == "int":
+            lines.append(f"        Store_field(cons, 0, Val_int({param_name}_arr[i]));")
+        elif element_type.name == "float":
+            lines.append(f"        Store_field(cons, 0, caml_copy_double({param_name}_arr[i]));")
+        elif element_type.name == "bool":
+            lines.append(f"        Store_field(cons, 0, Val_bool({param_name}_arr[i]));")
+
+        # Link to rest of list
+        lines.append(f"        Store_field(cons, 1, ml_{param_name});")
+        lines.append(f"        ml_{param_name} = cons;")
+        lines.append(f"    }}")
+
+        return lines
+
+    def _convert_c_nested_list_to_ocaml(self, param_name: str, inner_list_type: IRType) -> list:
+        """
+        Generate code to convert C nested list (list of lists) to OCaml list list.
+
+        For nested lists like int list list, we expect:
+        - A void*** array where each element is a [length, array_ptr] pair
+        - The outer length (passed as a separate parameter)
+        """
+        lines = []
+
+        if not inner_list_type.params or not inner_list_type.params[0].is_primitive():
+            # Only support primitive inner types for now
+            lines.append(f"    ml_{param_name} = (value){param_name};")
+            return lines
+
+        inner_element_type = inner_list_type.params[0]
+
+        lines.append(f"    /* Convert C nested list to OCaml list list */")
+        lines.append(f"    void*** {param_name}_arr = (void***){param_name};")
+        lines.append(f"    CAMLlocal1(inner_list);")
+        lines.append(f"    CAMLlocal1(inner_cons);")
+        lines.append(f"    CAMLlocal1(outer_cons);")
+        lines.append(f"    ml_{param_name} = Val_emptylist;  /* Start with empty list */")
+        lines.append(f"    for (int i = {param_name}_len - 1; i >= 0; i--) {{")
+        lines.append(f"        /* Each element is [length, array_ptr] */")
+        lines.append(f"        void** inner_pair = {param_name}_arr[i];")
+        lines.append(f"        int inner_len = (int)(intptr_t)inner_pair[0];")
+
+        # Convert inner array based on type
+        if inner_element_type.name == "int":
+            lines.append(f"        int* inner_arr = (int*)inner_pair[1];")
+        elif inner_element_type.name == "float":
+            lines.append(f"        double* inner_arr = (double*)inner_pair[1];")
+        elif inner_element_type.name == "string":
+            lines.append(f"        const char** inner_arr = (const char**)inner_pair[1];")
+        elif inner_element_type.name == "bool":
+            lines.append(f"        int* inner_arr = (int*)inner_pair[1];")
+
+        # Build inner OCaml list
+        lines.append(f"        inner_list = Val_emptylist;")
+        lines.append(f"        for (int j = inner_len - 1; j >= 0; j--) {{")
+        lines.append(f"            inner_cons = caml_alloc(2, 0);")
+
+        # Store element based on type
+        if inner_element_type.name == "string":
+            lines.append(f"            Store_field(inner_cons, 0, caml_copy_string(inner_arr[j]));")
+        elif inner_element_type.name == "int":
+            lines.append(f"            Store_field(inner_cons, 0, Val_int(inner_arr[j]));")
+        elif inner_element_type.name == "float":
+            lines.append(f"            Store_field(inner_cons, 0, caml_copy_double(inner_arr[j]));")
+        elif inner_element_type.name == "bool":
+            lines.append(f"            Store_field(inner_cons, 0, Val_bool(inner_arr[j]));")
+
+        lines.append(f"            Store_field(inner_cons, 1, inner_list);")
+        lines.append(f"            inner_list = inner_cons;")
+        lines.append(f"        }}")
+
+        # Add inner list to outer list
+        lines.append(f"        outer_cons = caml_alloc(2, 0);")
+        lines.append(f"        Store_field(outer_cons, 0, inner_list);")
+        lines.append(f"        Store_field(outer_cons, 1, ml_{param_name});")
+        lines.append(f"        ml_{param_name} = outer_cons;")
+        lines.append(f"    }}")
+
+        return lines
+
+    def _convert_ocaml_list_to_c(self, return_type: IRType) -> list:
+        """
+        Generate code to convert OCaml list to C array.
+
+        Returns a struct containing the array pointer and length.
+        """
+        lines = []
+
+        if not return_type.params:
+            # No element type specified, fall back to opaque pointer
+            lines.append(f"    void* result = (void*)ml_result;")
+            lines.append(f"    CAMLreturnT(void*, result);")
+            return lines
+
+        element_type = return_type.params[0]
+
+        # Handle lists of tuples specially
+        if element_type.kind == TypeKind.TUPLE:
+            return self._convert_ocaml_list_of_tuples_to_c(element_type)
+
+        # For other complex element types, fall back to opaque pointer
+        if not element_type.is_primitive():
+            lines.append(f"    void* result = (void*)ml_result;")
+            lines.append(f"    CAMLreturnT(void*, result);")
+            return lines
+
+        # First pass: count list length
+        lines.append(f"    /* Convert OCaml list to C array */")
+        lines.append(f"    int list_len = 0;")
+        lines.append(f"    value temp_list = ml_result;")
+        lines.append(f"    while (temp_list != Val_emptylist) {{")
+        lines.append(f"        list_len++;")
+        lines.append(f"        temp_list = Field(temp_list, 1);  /* tail */")
+        lines.append(f"    }}")
+        lines.append(f"")
+
+        # Allocate result struct (length + array pointer)
+        lines.append(f"    /* Allocate result: [length, array_ptr] */")
+        lines.append(f"    void** result = (void**)malloc(2 * sizeof(void*));")
+        lines.append(f"    result[0] = (void*)(intptr_t)list_len;")
+        lines.append(f"")
+
+        # Handle empty list
+        lines.append(f"    if (list_len == 0) {{")
+        lines.append(f"        result[1] = NULL;")
+        lines.append(f"        CAMLreturnT(void*, result);")
+        lines.append(f"    }}")
+        lines.append(f"")
+
+        # Allocate array for elements
+        if element_type.name == "string":
+            lines.append(
+                f"    const char** array = (const char**)malloc(list_len * sizeof(const char*));"
+            )
+        elif element_type.name == "int":
+            lines.append(f"    int* array = (int*)malloc(list_len * sizeof(int));")
+        elif element_type.name == "float":
+            lines.append(f"    double* array = (double*)malloc(list_len * sizeof(double));")
+        elif element_type.name == "bool":
+            lines.append(f"    int* array = (int*)malloc(list_len * sizeof(int));")
+
+        # Second pass: extract elements
+        lines.append(f"")
+        lines.append(f"    temp_list = ml_result;")
+        lines.append(f"    for (int i = 0; i < list_len; i++) {{")
+        lines.append(f"        value head = Field(temp_list, 0);  /* head */")
+
+        if element_type.name == "string":
+            lines.append(f"        array[i] = strdup(String_val(head));")
+        elif element_type.name == "int":
+            lines.append(f"        array[i] = Int_val(head);")
+        elif element_type.name == "float":
+            lines.append(f"        array[i] = Double_val(head);")
+        elif element_type.name == "bool":
+            lines.append(f"        array[i] = Bool_val(head);")
+
+        lines.append(f"        temp_list = Field(temp_list, 1);  /* tail */")
+        lines.append(f"    }}")
+        lines.append(f"")
+        lines.append(f"    result[1] = array;")
+        lines.append(f"    CAMLreturnT(void*, result);")
+
+        return lines
+
+    def _convert_ocaml_list_of_tuples_to_c(self, tuple_type: IRType) -> list:
+        """
+        Generate code to convert OCaml list of tuples to C array of tuple arrays.
+
+        Each tuple is represented as void** array, and the list is an array of these.
+        Returns a struct containing [length, array_of_tuples].
+        """
+        lines = []
+
+        # Only handle tuples with all primitive elements
+        if not tuple_type.params or not all(p.is_primitive() for p in tuple_type.params):
+            # Fall back to opaque pointer for complex tuples
+            lines.append(f"    void* result = (void*)ml_result;")
+            lines.append(f"    CAMLreturnT(void*, result);")
+            return lines
+
+        tuple_size = len(tuple_type.params)
+
+        # First pass: count list length
+        lines.append(f"    /* Convert OCaml list of tuples to C array */")
+        lines.append(f"    int list_len = 0;")
+        lines.append(f"    value temp_list = ml_result;")
+        lines.append(f"    while (temp_list != Val_emptylist) {{")
+        lines.append(f"        list_len++;")
+        lines.append(f"        temp_list = Field(temp_list, 1);  /* tail */")
+        lines.append(f"    }}")
+        lines.append(f"")
+
+        # Allocate result struct (length + array pointer)
+        lines.append(f"    /* Allocate result: [length, array_of_tuples] */")
+        lines.append(f"    void** result = (void**)malloc(2 * sizeof(void*));")
+        lines.append(f"    result[0] = (void*)(intptr_t)list_len;")
+        lines.append(f"")
+
+        # Handle empty list
+        lines.append(f"    if (list_len == 0) {{")
+        lines.append(f"        result[1] = NULL;")
+        lines.append(f"        CAMLreturnT(void*, result);")
+        lines.append(f"    }}")
+        lines.append(f"")
+
+        # Allocate array of tuple pointers
+        lines.append(f"    void*** tuple_array = (void***)malloc(list_len * sizeof(void**));")
+        lines.append(f"")
+
+        # Second pass: extract tuples
+        lines.append(f"    temp_list = ml_result;")
+        lines.append(f"    for (int i = 0; i < list_len; i++) {{")
+        lines.append(f"        value tuple = Field(temp_list, 0);  /* head */")
+        lines.append(f"")
+        lines.append(f"        /* Allocate array for tuple elements */")
+        lines.append(f"        void** tuple_elem = (void**)malloc({tuple_size} * sizeof(void*));")
+        lines.append(f"")
+
+        # Extract each tuple element
+        for j, elem_type in enumerate(tuple_type.params):
+            lines.append(f"        value elem_{j} = Field(tuple, {j});")
+            if elem_type.name == "string":
+                lines.append(f"        tuple_elem[{j}] = (void*)strdup(String_val(elem_{j}));")
+            elif elem_type.name == "int":
+                lines.append(f"        tuple_elem[{j}] = (void*)(intptr_t)Int_val(elem_{j});")
+            elif elem_type.name == "float":
+                lines.append(f"        double* float_val_{j} = (double*)malloc(sizeof(double));")
+                lines.append(f"        *float_val_{j} = Double_val(elem_{j});")
+                lines.append(f"        tuple_elem[{j}] = (void*)float_val_{j};")
+            elif elem_type.name == "bool":
+                lines.append(f"        tuple_elem[{j}] = (void*)(intptr_t)Bool_val(elem_{j});")
+
+        lines.append(f"")
+        lines.append(f"        tuple_array[i] = tuple_elem;")
+        lines.append(f"        temp_list = Field(temp_list, 1);  /* tail */")
+        lines.append(f"    }}")
+        lines.append(f"")
+        lines.append(f"    result[1] = tuple_array;")
+        lines.append(f"    CAMLreturnT(void*, result);")
+
+        return lines
+
+    def _convert_c_tuple_to_ocaml(self, param_name: str, param_type: IRType) -> list:
+        """
+        Generate code to convert C tuple (void* to struct) to OCaml tuple.
+
+        For tuple parameters, we expect a void* pointer to a struct containing the tuple elements.
+        """
+        lines = []
+
+        if not param_type.params or not all(p.is_primitive() for p in param_type.params):
+            # For complex element types, fall back to opaque pointer
+            lines.append(f"    ml_{param_name} = (value){param_name};")
+            return lines
+
+        # Cast void* to appropriate struct pointer and extract elements
+        lines.append(f"    /* Convert C tuple to OCaml tuple */")
+        lines.append(f"    void** {param_name}_arr = (void**){param_name};")
+
+        # Allocate OCaml tuple
+        tuple_size = len(param_type.params)
+        lines.append(f"    ml_{param_name} = caml_alloc({tuple_size}, 0);")
+
+        # Store each element in the tuple
+        for i, elem_type in enumerate(param_type.params):
+            if elem_type.name == "string":
+                lines.append(
+                    f"    Store_field(ml_{param_name}, {i}, caml_copy_string((const char*){param_name}_arr[{i}]));"
+                )
+            elif elem_type.name == "int":
+                lines.append(
+                    f"    Store_field(ml_{param_name}, {i}, Val_int((intptr_t){param_name}_arr[{i}]));"
+                )
+            elif elem_type.name == "float":
+                lines.append(
+                    f"    Store_field(ml_{param_name}, {i}, caml_copy_double(*(double*){param_name}_arr[{i}]));"
+                )
+            elif elem_type.name == "bool":
+                lines.append(
+                    f"    Store_field(ml_{param_name}, {i}, Val_bool((intptr_t){param_name}_arr[{i}]));"
+                )
+
+        return lines
+
+    def _convert_ocaml_tuple_to_c(self, return_type: IRType) -> list:
+        """
+        Generate code to convert OCaml tuple to C struct (void* array).
+
+        Returns a void** array containing pointers to the tuple elements.
+        """
+        lines = []
+
+        if not return_type.params or not all(p.is_primitive() for p in return_type.params):
+            # For complex element types, fall back to opaque pointer
+            lines.append(f"    void* result = (void*)ml_result;")
+            lines.append(f"    CAMLreturnT(void*, result);")
+            return lines
+
+        tuple_size = len(return_type.params)
+
+        # Allocate result array
+        lines.append(f"    /* Convert OCaml tuple to C array */")
+        lines.append(f"    void** result = (void**)malloc({tuple_size} * sizeof(void*));")
+
+        # Extract each element from the OCaml tuple
+        for i, elem_type in enumerate(return_type.params):
+            lines.append(f"    value elem_{i} = Field(ml_result, {i});")
+
+            if elem_type.name == "string":
+                lines.append(f"    result[{i}] = (void*)strdup(String_val(elem_{i}));")
+            elif elem_type.name == "int":
+                lines.append(f"    result[{i}] = (void*)(intptr_t)Int_val(elem_{i});")
+            elif elem_type.name == "float":
+                lines.append(f"    double* float_val_{i} = (double*)malloc(sizeof(double));")
+                lines.append(f"    *float_val_{i} = Double_val(elem_{i});")
+                lines.append(f"    result[{i}] = (void*)float_val_{i};")
+            elif elem_type.name == "bool":
+                lines.append(f"    result[{i}] = (void*)(intptr_t)Bool_val(elem_{i});")
+
+        lines.append(f"    CAMLreturnT(void*, result);")
 
         return lines
 
@@ -202,14 +726,29 @@ class CStubGenerator:
         Convert IR type to C type string.
 
         Primitives map to C native types.
-        Complex types (options, lists, tuples, custom) map to void* (opaque).
+        Options of primitives map to pointer types (nullable).
+        Other complex types map to void* (opaque).
         """
         if ir_type.is_primitive():
             return self.C_TYPE_MAP.get(ir_type.name, "char*")
 
-        # Complex types are opaque pointers in C
+        # Handle option types specially - they become nullable pointers
+        if ir_type.kind == TypeKind.OPTION:
+            if ir_type.params and ir_type.params[0].is_primitive():
+                inner_type = ir_type.params[0]
+                if inner_type.name == "string":
+                    return "const char*"  # Nullable string
+                elif inner_type.name == "int":
+                    return "int*"  # Pointer to int (NULL = None)
+                elif inner_type.name == "float":
+                    return "double*"  # Pointer to double
+                elif inner_type.name == "bool":
+                    return "int*"  # Pointer to bool
+            # For option of complex types, use void*
+            return "void*"
+
+        # Other complex types are opaque pointers in C
         if ir_type.kind in (
-            TypeKind.OPTION,
             TypeKind.LIST,
             TypeKind.TUPLE,
             TypeKind.CUSTOM,

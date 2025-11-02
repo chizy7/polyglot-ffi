@@ -1,6 +1,6 @@
 # Type Mapping Reference
 
-**Version:** v0.5.0
+**Version:** v0.5.1
 
 Complete guide to type mappings across languages in Polyglot FFI.
 

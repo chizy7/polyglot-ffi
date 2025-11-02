@@ -8,11 +8,7 @@
 
 Polyglot FFI aims to eliminate FFI boilerplate by automatically generating type-safe, memory-safe bindings between programming languages. Our goal is to support multiple source and target languages with excellent developer experience.
 
-### Current Status: **v0.5.0 - In Production** 
-- 285 tests passing (88% coverage)
-- Complete documentation
-- Full CI/CD automation
-- Ready for PyPI release
+### Current Version: **v0.5.1** 
 
 ---
 

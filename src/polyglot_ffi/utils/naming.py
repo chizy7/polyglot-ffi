@@ -69,14 +69,52 @@ def sanitize_module_name(name: str) -> str:
     This is the main function to use for module names that need to work
     in Dune, Python, C, and OCaml.
 
+    OCaml module names must:
+    - Start with a letter (not a digit or underscore)
+    - Contain only letters, digits, and underscores
+
     Args:
         name: Original module name
 
     Returns:
         Sanitized module name safe for all systems
 
+    Raises:
+        ValueError: If the name cannot be sanitized to a valid module name
+
     Example:
         >>> sanitize_module_name("my-crypto-lib")
         'my_crypto_lib'
+        >>> sanitize_module_name("123invalid")
+        ValueError: Module name '123invalid' is invalid...
     """
-    return name.replace("-", "_")
+    # Replace hyphens with underscores
+    sanitized = name.replace("-", "_")
+
+    # Check if it starts with a digit
+    if sanitized and sanitized[0].isdigit():
+        raise ValueError(
+            f"Module name '{name}' is invalid: OCaml module names cannot start with a digit.\n"
+            f"  Suggestions:\n"
+            f"  • Rename the file to start with a letter (e.g., 'module_{name}')\n"
+            f"  • Use a descriptive prefix (e.g., 'lib_{name}' or 'test_{name}')"
+        )
+
+    # Check if it starts with an underscore (also invalid in OCaml modules)
+    if sanitized and sanitized[0] == "_":
+        raise ValueError(
+            f"Module name '{name}' is invalid: OCaml module names cannot start with an underscore.\n"
+            f"  Suggestions:\n"
+            f"  • Rename the file to start with a letter (e.g., 'module{name}')\n"
+            f"  • Remove leading underscores"
+        )
+
+    # Check if it's empty or contains only invalid characters
+    if not sanitized or not sanitized.replace("_", "").isalnum():
+        raise ValueError(
+            f"Module name '{name}' is invalid: must contain at least one letter or digit.\n"
+            f"  Suggestions:\n"
+            f"  • Use a descriptive name with letters (e.g., 'mymodule')"
+        )
+
+    return sanitized

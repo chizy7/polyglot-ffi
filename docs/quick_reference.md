@@ -234,6 +234,6 @@ See [Installation Guide](installation.md#troubleshooting) for more help.
 
 ---
 
-**Version:** 0.5.0
+**Version:** 0.5.1
 **Documentation:** https://polyglotffi.com/
 **Repository:** https://github.com/chizy7/polyglot-ffi 

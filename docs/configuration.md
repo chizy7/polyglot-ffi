@@ -51,6 +51,31 @@ Project metadata and general settings.
   authors = ["Alice <alice@example.com>", "Bob <bob@example.com>"]
   ```
 
+### [source]
+
+Source language configuration.
+
+**Required:**
+- `language` (string) - Source language (currently only `"ocaml"` is supported)
+
+**Optional:**
+- `dir` (string) - Source directory (default: `"src"`)
+- `files` (array) - List of `.mli` files to process
+- `libraries` (array) - Additional OCaml libraries to link (default: `[]`)
+  - Supported libraries: `str`, `unix`, `threads`, and others
+  - Automatically adds required C library flags (e.g., `-lcamlstr` for `str`)
+  - Example: `["str", "unix"]`
+- `exclude` (array) - Files to exclude from processing
+
+**Example:**
+```toml
+[source]
+language = "ocaml"
+dir = "src"
+files = ["api.mli", "utils.mli"]
+libraries = ["str", "unix"]  # Link OCaml str and unix libraries
+```
+
 ### [bindings]
 
 Bindings generation configuration.
@@ -153,6 +178,13 @@ version = "0.1.0"
 description = "FFI bindings for cryptographic library"
 authors = ["Jane Developer <jane@example.com>"]
 
+# Source configuration
+[source]
+language = "ocaml"
+dir = "src"
+files = ["crypto.mli", "hash.mli"]
+libraries = ["str", "unix"]  # Link OCaml str and unix libraries
+
 # Bindings configuration
 [bindings]
 source_dir = "src"
@@ -215,12 +247,41 @@ polyglot-ffi generate src/module.mli -v
 [project]
 name = "simple-lib"
 
-[bindings]
-source_files = ["src/api.mli"]
+[source]
+language = "ocaml"
+files = ["api.mli"]
 
 [targets.python]
 enabled = true
 ```
+
+### Using OCaml Standard Libraries
+
+If your OCaml code uses standard libraries like `Str`, `Unix`, or `Thread`, you need to specify them:
+
+```toml
+[project]
+name = "text-processor"
+
+[source]
+language = "ocaml"
+files = ["text_utils.mli"]
+libraries = ["str"]  # For Str module (regex, string operations)
+
+[targets.python]
+enabled = true
+```
+
+**Common OCaml Libraries:**
+- `str` - Regular expressions and advanced string operations
+- `unix` - Unix system calls (files, processes, networking)
+- `threads` - Multi-threading support
+
+**Why specify libraries?**
+When you use OCaml standard libraries, the generated bindings need to link against both the OCaml library and its corresponding C library. Polyglot FFI automatically handles this by:
+1. Adding the library to the Dune configuration
+2. Including the correct C linker flags (e.g., `-lcamlstr` for `str`)
+3. Ensuring the shared library links properly
 
 ### Multi-Module Project
 

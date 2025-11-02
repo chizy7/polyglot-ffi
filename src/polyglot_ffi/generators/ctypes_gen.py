@@ -65,6 +65,9 @@ end
             for param in func.params:
                 ctype = self._get_ctype(param.type)
                 sig_parts.append(ctype)
+                # Add length parameter for list types
+                if param.type.kind == TypeKind.LIST:
+                    sig_parts.append("int")
 
             # Add return type
             return_ctype = self._get_ctype(func.return_type)
@@ -101,28 +104,37 @@ end
         # None = NULL, Some x = pointer to x
         if ir_type.kind == TypeKind.OPTION:
             if ir_type.params:
-                inner_ctype = self._get_ctype(ir_type.params[0])
-                # For C FFI, options become nullable pointers
-                return f"ptr {inner_ctype}"
-            return "ptr void"
+                inner_type = ir_type.params[0]
+                # Special case: string is already a pointer (char*), so string option
+                # should just be string (nullable), not ptr string (char**)
+                if inner_type.name == "string":
+                    return "string"
+                # For other primitives, wrap in ptr to make them nullable
+                inner_ctype = self._get_ctype(inner_type)
+                # Wrap in parentheses to ensure correct parsing in ctypes expressions
+                return f"(ptr {inner_ctype})"
+            return "(ptr void)"
 
         # Handle list types
         # Lists in OCaml FFI: Lists are OCaml values, passed as abstract pointers
         if ir_type.kind == TypeKind.LIST:
             # Next features, we'll represent lists as opaque OCaml values
             # Full marshaling support comes in future versions
-            return "ptr void"  # Opaque list pointer
+            # Wrap in parentheses to ensure correct parsing in ctypes expressions
+            return "(ptr void)"  # Opaque list pointer
 
         # Handle tuple types
         # Tuples in OCaml FFI: Can be passed as structures or individual params
         if ir_type.kind == TypeKind.TUPLE:
             # next features, represent tuples as opaque values
             # Full struct support comes in future versions
-            return "ptr void"  # Opaque tuple pointer
+            # Wrap in parentheses to ensure correct parsing in ctypes expressions
+            return "(ptr void)"  # Opaque tuple pointer
 
         # Handle custom types (records, variants, type aliases)
         if ir_type.kind in (TypeKind.CUSTOM, TypeKind.RECORD, TypeKind.VARIANT):
             # Custom types are passed as opaque pointers in C FFI
-            return "ptr void"  # Opaque custom type pointer
+            # Wrap in parentheses to ensure correct parsing in ctypes expressions
+            return "(ptr void)"  # Opaque custom type pointer
 
         raise ValueError(f"Unsupported type for Ctypes generation: {ir_type}")

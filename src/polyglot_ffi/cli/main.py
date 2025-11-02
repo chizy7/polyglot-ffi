@@ -14,7 +14,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.5.0", prog_name="polyglot-ffi")
+@click.version_option(version="0.5.1", prog_name="polyglot-ffi")
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool) -> None:
@@ -146,6 +146,8 @@ def generate(
     verbose = verbose or ctx.obj.get("global_verbose", False)
 
     # If no source file provided, look for config
+    config = None
+    ocaml_libraries = None
     if not source_file:
         config_path = Path.cwd() / "polyglot.toml"
         if not config_path.exists():
@@ -155,6 +157,51 @@ def generate(
             sys.exit(1)
 
         console.print(f"Using config: {config_path}")
+
+        # Load config to get libraries and other settings
+        from polyglot_ffi.core.config import load_config, validate_config
+
+        try:
+            config = load_config(config_path)
+            ocaml_libraries = config.source.libraries if config.source.libraries else None
+
+            # Validate config and show warnings
+            warnings = validate_config(config)
+            if warnings:
+                console.print(f"\n[yellow]Configuration warnings:[/yellow]")
+                for warning in warnings:
+                    console.print(f"  [yellow]⚠[/yellow] {warning}")
+
+                # If no targets are enabled, provide helpful suggestions
+                if "No target languages are enabled" in warnings:
+                    console.print(f"\n[yellow]Suggestions:[/yellow]")
+                    console.print(
+                        f"  • Set 'enabled = true' for at least one target in polyglot.toml"
+                    )
+                    console.print(
+                        f"  • Or use --target flag to specify targets: polyglot-ffi generate --target python"
+                    )
+                    console.print(f"  • Run 'polyglot-ffi check' to validate your configuration")
+                    console.print()
+
+            # Get source file from config if not provided
+            if config.source.files and len(config.source.files) > 0:
+                source_dir = config.source.dir or "src"
+                source_file = str(Path(source_dir) / config.source.files[0])
+        except Exception as e:
+            if verbose:
+                console.print(f"[yellow]Warning:[/yellow] Could not load config: {e}")
+    else:
+        # Even if source file is provided, try to load config for libraries
+        config_path = Path.cwd() / "polyglot.toml"
+        if config_path.exists():
+            from polyglot_ffi.core.config import load_config
+
+            try:
+                config = load_config(config_path)
+                ocaml_libraries = config.source.libraries if config.source.libraries else None
+            except Exception:
+                pass  # Silently ignore config errors when using direct source file
 
     try:
         from rich.progress import BarColumn, TaskProgressColumn, TimeRemainingColumn
@@ -183,6 +230,7 @@ def generate(
                 dry_run=dry_run,
                 force=force,
                 verbose=verbose,
+                ocaml_libraries=ocaml_libraries,
             )
 
             # Update progress for each stage

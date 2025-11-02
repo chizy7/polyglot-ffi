@@ -166,3 +166,162 @@ val test : string -> string
 
         assert len(module.functions) == 1
         assert module.functions[0].name == "test"
+
+
+class TestOCamlParserTypeDefinitions:
+    """Test parsing type definitions."""
+
+    def test_invalid_type_definition_malformed(self):
+        """Test malformed type definition."""
+        # This should trigger line 154 - has "type" and "=" but invalid format
+        # The regex expects: type name = definition
+        # This has "=" but no valid name before it
+        content = """
+type = invalid_format
+"""
+        parser = OCamlParser(content)
+
+        with pytest.raises(ParseError) as exc_info:
+            parser.parse()
+
+        assert "Invalid type definition" in str(exc_info.value)
+
+    def test_parameter_parsing_error_with_mock(self):
+        """Test error handling when parsing parameter types fails."""
+        from unittest.mock import Mock, patch
+
+        content = """
+val test : string -> int
+"""
+        parser = OCamlParser(content)
+
+        # Mock _parse_type to raise ParseError for the first parameter
+        original_parse_type = parser._parse_type
+        call_count = [0]
+
+        def mock_parse_type(type_str, line_num):
+            call_count[0] += 1
+            # Raise error on first call (first parameter)
+            if call_count[0] == 1:
+                raise ParseError("Mocked parse error", line=line_num)
+            return original_parse_type(type_str, line_num)
+
+        parser._parse_type = mock_parse_type
+
+        with pytest.raises(ParseError) as exc_info:
+            parser.parse()
+
+        # Should contain error about parsing parameter
+        assert "Error parsing parameter" in str(exc_info.value)
+
+    def test_type_alias(self):
+        """Test parsing type aliases."""
+        content = """
+type my_int = int
+"""
+        parser = OCamlParser(content)
+        # Type aliases are skipped for now
+        module = parser.parse()
+        # Should not fail, but alias won't be in type_definitions
+        assert len(module.type_definitions) == 0
+
+    def test_invalid_record_field(self):
+        """Test that invalid record fields raise ParseError."""
+        content = """
+type user = { invalid_syntax }
+"""
+        parser = OCamlParser(content)
+
+        with pytest.raises(ParseError) as exc_info:
+            parser.parse()
+
+        assert "Invalid record field" in str(exc_info.value)
+
+    def test_invalid_variant(self):
+        """Test that invalid variant constructors raise ParseError."""
+        content = """
+type result = | 123invalid | Error
+"""
+        parser = OCamlParser(content)
+
+        with pytest.raises(ParseError) as exc_info:
+            parser.parse()
+
+        assert "Invalid variant" in str(exc_info.value)
+
+
+class TestOCamlParserFunctionEdgeCases:
+    """Test edge cases in function parsing."""
+
+    def test_function_with_inline_documentation(self):
+        """Test parsing function with inline documentation."""
+        content = """
+val greet : string -> (** name parameter **) string
+"""
+        parser = OCamlParser(content)
+        module = parser.parse()
+
+        # Should parse successfully despite inline doc
+        assert len(module.functions) == 1
+        assert module.functions[0].name == "greet"
+
+    def test_invalid_parameter_type(self):
+        """Test that invalid parameter types with suggestions raise ParseError."""
+        content = """
+val process : unknown_type123 -> string
+"""
+        parser = OCamlParser(content)
+
+        # This should create a CUSTOM type, not raise an error
+        module = parser.parse()
+        assert module.functions[0].params[0].type.kind == TypeKind.CUSTOM
+
+    def test_invalid_return_type_in_function(self):
+        """Test error parsing return type."""
+        # Create an invalid type that will trigger unsupported type error
+        content = """
+val test : string -> (((invalid
+"""
+        parser = OCamlParser(content)
+
+        with pytest.raises(ParseError):
+            parser.parse()
+
+
+class TestOCamlParserClassMethods:
+    """Test class methods."""
+
+    def test_parse_string_class_method(self):
+        """Test parse_string class method."""
+        content = """
+val test : string -> string
+"""
+        module = OCamlParser.parse_string(content, "test.mli")
+
+        assert len(module.functions) == 1
+        assert module.functions[0].name == "test"
+
+    def test_parse_string_with_default_filename(self):
+        """Test parse_string with default filename."""
+        content = """
+val greet : string -> string
+"""
+        module = OCamlParser.parse_string(content)
+
+        assert len(module.functions) == 1
+
+
+class TestConvenienceFunctions:
+    """Test convenience functions."""
+
+    def test_parse_mli_string(self):
+        """Test parse_mli_string convenience function."""
+        from polyglot_ffi.parsers.ocaml import parse_mli_string
+
+        content = """
+val add : int -> int -> int
+"""
+        module = parse_mli_string(content)
+
+        assert len(module.functions) == 1
+        assert module.functions[0].name == "add"
