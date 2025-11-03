@@ -22,7 +22,7 @@ pip install -e ".[dev]"
 
 ```bash
 polyglot-ffi --version
-# Output: polyglot-ffi, version 0.5.1
+# Output: polyglot-ffi, version 0.5.2
 ```
 
 ## Your First Project

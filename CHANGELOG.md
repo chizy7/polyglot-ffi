@@ -13,6 +13,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.5.2] - 2025-11-03
+
+### Fixed
+- **Critical Memory Management Bug:**
+  - Fixed NULL pointer dereference in Option type handling that caused crashes
+  - Option<string> now properly checks for NULL before accessing pointer
+  - Option<int/float/bool> now correctly handles NULL returns without dereferencing
+  - Fixed memory cleanup for Option<string> by using `c_void_p` instead of `c_char_p` to avoid ctypes automatic memory management conflicts
+  - Properly frees C-allocated memory using `ctypes.string_at()` before cleanup
+  - Uses `is None` check instead of falsy check to correctly handle `Some(0)` and `Some(False)`
+
+- **Type Safety Improvements:**
+  - Exception handling for pointer dereferencing prevents crashes on invalid pointers
+  - Proper NULL checks before all pointer operations
+  - Fixed edge cases with empty inputs returning None for Option types
+
+### Changed
+- **Python Wrapper Generation:**
+  - Changed Option<string> return type from `ctypes.c_char_p` to `ctypes.c_void_p` for manual memory management
+  - Improved NULL handling logic for all Option types with explicit None checks
+  - Better error messages and comments in generated code
+
 ## [0.5.1] - 2025-11-02
 
 ### Added
@@ -389,7 +411,8 @@ Security vulnerability fixes
 
 ---
 
-[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/chizy7/polyglot-ffi/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/chizy7/polyglot-ffi/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/chizy7/polyglot-ffi/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/chizy7/polyglot-ffi/compare/v0.4.2...v0.4.3
