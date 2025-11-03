@@ -179,16 +179,21 @@ class PythonGenerator:
             if func.return_type.params and func.return_type.params[0].is_primitive():
                 inner_type = func.return_type.params[0]
                 if inner_type.name == "string":
-                    lines.append("        if result is None:")
+                    lines.append("        if not result:")
                     lines.append("            return None")
-                    lines.append("        value = result.decode('utf-8')")
-                    lines.append("        # Clean up C-allocated string")
+                    lines.append("        # Result is c_void_p, convert to string and free")
+                    lines.append("        # Copy string from C memory to Python before freeing")
+                    lines.append("        value = ctypes.string_at(result).decode('utf-8')")
+                    lines.append("        # Clean up C-allocated string (strdup)")
                     lines.append("        _lib.ml_free_option(result)")
                     lines.append("        return value")
                 elif inner_type.name in ("int", "bool", "float"):
                     lines.append("        if result is None:")
                     lines.append("            return None")
-                    lines.append("        value = result[0]  # Dereference pointer")
+                    lines.append("        try:")
+                    lines.append("            value = result[0]  # Dereference pointer")
+                    lines.append("        except (ValueError, TypeError):")
+                    lines.append("            return None")
                     lines.append("        # Clean up C-allocated memory")
                     lines.append("        _lib.ml_free_option(result)")
                     lines.append("        return value")
@@ -268,7 +273,9 @@ class PythonGenerator:
             if ir_type.params and ir_type.params[0].is_primitive():
                 inner_type = ir_type.params[0]
                 if inner_type.name == "string":
-                    return "ctypes.c_char_p"  # Nullable string
+                    # Use c_void_p for strings to avoid automatic ctypes memory management
+                    # We'll manually convert and free the string
+                    return "ctypes.c_void_p"  # Nullable string pointer
                 elif inner_type.name == "int":
                     return "ctypes.POINTER(ctypes.c_int)"  # Pointer to int
                 elif inner_type.name == "float":

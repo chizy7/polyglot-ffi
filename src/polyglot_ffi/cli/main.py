@@ -14,7 +14,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.5.1", prog_name="polyglot-ffi")
+@click.version_option(version="0.5.2", prog_name="polyglot-ffi")
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool) -> None:
