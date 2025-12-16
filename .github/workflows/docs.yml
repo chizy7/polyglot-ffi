@@ -55,7 +55,7 @@ jobs:
         mkdocs gh-deploy --force
 
     - name: Upload documentation artifacts
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: documentation-site
         path: site/
