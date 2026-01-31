@@ -1,91 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/</loc>
+         <loc>https://polyglotffi.com/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/CHANGELOG/</loc>
+         <loc>https://polyglotffi.com/CHANGELOG/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/CODE_OF_CONDUCT/</loc>
+         <loc>https://polyglotffi.com/CODE_OF_CONDUCT/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/DOCUMENTATION/</loc>
+         <loc>https://polyglotffi.com/DOCUMENTATION/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/LICENSE/</loc>
+         <loc>https://polyglotffi.com/LICENSE/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/ROADMAP/</loc>
+         <loc>https://polyglotffi.com/ROADMAP/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/SECURITY/</loc>
+         <loc>https://polyglotffi.com/SECURITY/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/architecture/</loc>
+         <loc>https://polyglotffi.com/architecture/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/configuration/</loc>
+         <loc>https://polyglotffi.com/configuration/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/contributing/</loc>
+         <loc>https://polyglotffi.com/contributing/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/faq/</loc>
+         <loc>https://polyglotffi.com/faq/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/installation/</loc>
+         <loc>https://polyglotffi.com/installation/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/quick_reference/</loc>
+         <loc>https://polyglotffi.com/quick_reference/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/quickstart/</loc>
+         <loc>https://polyglotffi.com/quickstart/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/type-mapping/</loc>
+         <loc>https://polyglotffi.com/type-mapping/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/api/</loc>
+         <loc>https://polyglotffi.com/api/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/api/config/</loc>
+         <loc>https://polyglotffi.com/api/config/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/api/generators/</loc>
+         <loc>https://polyglotffi.com/api/generators/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/api/ir-types/</loc>
+         <loc>https://polyglotffi.com/api/ir-types/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/api/parser/</loc>
+         <loc>https://polyglotffi.com/api/parser/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/api/type-system/</loc>
+         <loc>https://polyglotffi.com/api/type-system/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
     <url>
-         <loc>https://chizy7.github.io/polyglot-ffi/man/</loc>
+         <loc>https://polyglotffi.com/man/</loc>
          <lastmod>2026-01-31</lastmod>
     </url>
 </urlset>
