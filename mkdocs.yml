@@ -1,7 +1,7 @@
 site_name: Polyglot FFI Documentation
 site_description: Automatic FFI bindings generator for polyglot projects
 site_author: Polyglot FFI Contributors
-site_url: https://chizy7.github.io/polyglot-ffi/
+site_url: https://polyglotffi.com/
 
 repo_name: chizy7/polyglot-ffi
 repo_url: https://github.com/chizy7/polyglot-ffi
