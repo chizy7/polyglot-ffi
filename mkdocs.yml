@@ -106,4 +106,4 @@ extra:
   version:
     provider: mike
 
-copyright: Copyright &copy; 2025 Polyglot FFI Contributors
+copyright: Copyright &copy; 2025-2026 Polyglot FFI Contributors
