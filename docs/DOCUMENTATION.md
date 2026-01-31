@@ -366,36 +366,33 @@ Documentation is **automatically deployed** when you push to `master`:
 # .github/workflows/docs.yml
 - Push to master with doc changes
   ↓
-- GitHub Actions triggers
+- Cloudflare Pages triggers build
   ↓
 - mkdocs build
   ↓
-- mkdocs gh-deploy
-  ↓
-- Published to GitHub Pages!
+- Published to Cloudflare Pages!
 ```
 
 **URL:** https://polyglotffi.com/
 
-### Manual Deployment
+### Deployment
 
-If you need to deploy manually:
+Documentation is automatically deployed to [Cloudflare Pages](https://pages.cloudflare.com/) when changes are pushed to the `master` branch.
+
+**To test locally before pushing:**
 
 ```bash
-# Build and deploy to gh-pages branch
-mkdocs gh-deploy
+# Build documentation
+mkdocs build
 
-# With custom commit message
-mkdocs gh-deploy -m "Update documentation for v0.5.1"
-
-# Force push (use with caution)
-mkdocs gh-deploy --force
+# Preview locally
+mkdocs serve
 ```
 
-**What this does:**
-1. Builds documentation to `site/`
-2. Pushes to `gh-pages` branch
-3. GitHub Pages automatically publishes
+**What happens on push:**
+1. Cloudflare Pages detects the push to `master`
+2. Runs `pip install mkdocs mkdocs-material mkdocstrings[python] && mkdocs build`
+3. Deploys the `site/` directory to `polyglotffi.com`
 
 ### Deployment with Versioning
 
@@ -663,8 +660,8 @@ mkdocs serve              # Live preview
 mkdocs build              # Build site
 mkdocs build --strict     # Strict build (fail on warnings)
 
-# Deployment
-mkdocs gh-deploy          # Deploy to GitHub Pages
+# Deployment (automatic via Cloudflare Pages on push to master)
+git push origin master    # Triggers Cloudflare Pages deploy
 mike deploy VERSION       # Deploy versioned docs
 
 # Maintenance

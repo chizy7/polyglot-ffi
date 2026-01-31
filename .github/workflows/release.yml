@@ -149,47 +149,11 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       # Using Trusted Publishing (OIDC) - no password/token needed!
 
-  publish-docs:
-    name: Publish documentation
-    needs: create-release
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.11'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e ".[dev]"
-        pip install mkdocs mkdocs-material mkdocstrings[python] mike
-
-    - name: Configure git
-      run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-
-    - name: Extract version
-      id: version
-      run: |
-        VERSION=${GITHUB_REF#refs/tags/v}
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-    - name: Deploy docs with mike
-      run: |
-        mike deploy --push --update-aliases ${{ steps.version.outputs.version }} latest
-        mike set-default --push latest
+  # Documentation is automatically deployed via Cloudflare Pages on push to master
 
   announce:
     name: Post-release tasks
-    needs: [publish-pypi, publish-docs]
+    needs: [publish-pypi]
     runs-on: ubuntu-latest
 
     steps:
