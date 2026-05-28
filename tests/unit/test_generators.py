@@ -3,17 +3,17 @@ Unit tests for code generators.
 """
 
 import pytest
-from polyglot_ffi.generators.ctypes_gen import CtypesGenerator
+
 from polyglot_ffi.generators.c_stubs_gen import CStubGenerator
-from polyglot_ffi.generators.python_gen import PythonGenerator
+from polyglot_ffi.generators.ctypes_gen import CtypesGenerator
 from polyglot_ffi.generators.dune_gen import DuneGenerator
+from polyglot_ffi.generators.python_gen import PythonGenerator
 from polyglot_ffi.ir.types import (
-    IRModule,
-    IRFunction,
-    IRParameter,
-    STRING,
     INT,
-    FLOAT,
+    STRING,
+    IRFunction,
+    IRModule,
+    IRParameter,
 )
 
 
@@ -115,7 +115,7 @@ class TestCtypesGenerator:
 
     def test_tuple_type_mapping(self):
         """Test tuple type mapping in ctypes."""
-        from polyglot_ffi.ir.types import ir_tuple, ir_primitive
+        from polyglot_ffi.ir.types import ir_primitive, ir_tuple
 
         gen = CtypesGenerator()
 

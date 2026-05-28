@@ -10,16 +10,14 @@ Generates OCaml ctypes code for FFI bindings, supporting:
 - Variant types
 """
 
-from typing import Dict
-
-from polyglot_ffi.ir.types import IRModule, IRType, IRTypeDefinition, TypeKind
+from polyglot_ffi.ir.types import IRModule, IRType, TypeKind
 
 
 class CtypesGenerator:
     """Generate OCaml ctypes binding code."""
 
     # Map IR primitive types to Ctypes types
-    TYPE_MAP: Dict[str, str] = {
+    TYPE_MAP: dict[str, str] = {
         "string": "string",
         "int": "int",
         "float": "double",

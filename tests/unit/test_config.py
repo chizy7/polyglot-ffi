@@ -3,8 +3,7 @@ Unit tests for configuration module.
 """
 
 import sys
-import tempfile
-from pathlib import Path
+
 import pytest
 
 from polyglot_ffi.core.config import (
@@ -119,16 +118,14 @@ class TestLoadConfigErrors:
         """Test missing required field error."""
         config_file = tmp_path / "polyglot.toml"
         # Missing source section
-        config_file.write_text(
-            """
+        config_file.write_text("""
 [project]
 name = "test"
 
 [[targets]]
 language = "python"
 output_dir = "out"
-"""
-        )
+""")
 
         with pytest.raises(ConfigurationError) as exc_info:
             load_config(config_file)
@@ -140,8 +137,7 @@ output_dir = "out"
     def test_unsupported_target_language_error(self, tmp_path):
         """Test unsupported target language error with suggestions."""
         config_file = tmp_path / "polyglot.toml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 [project]
 name = "test"
 
@@ -152,8 +148,7 @@ files = ["test.mli"]
 [[targets]]
 language = "javascript"
 output_dir = "out"
-"""
-        )
+""")
 
         with pytest.raises(ConfigurationError) as exc_info:
             load_config(config_file)
@@ -165,8 +160,7 @@ output_dir = "out"
     def test_unsupported_source_language_error(self, tmp_path):
         """Test unsupported source language error."""
         config_file = tmp_path / "polyglot.toml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 [project]
 name = "test"
 
@@ -177,8 +171,7 @@ files = ["test.rs"]
 [[targets]]
 language = "python"
 output_dir = "out"
-"""
-        )
+""")
 
         with pytest.raises(ConfigurationError) as exc_info:
             load_config(config_file)
@@ -193,8 +186,7 @@ class TestValidateConfig:
     def test_validate_config_with_missing_source_dir(self, tmp_path):
         """Test validation with missing source directory."""
         config_file = tmp_path / "polyglot.toml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 [project]
 name = "test"
 
@@ -206,8 +198,7 @@ dir = "nonexistent_dir"
 [[targets]]
 language = "python"
 output_dir = "out"
-"""
-        )
+""")
 
         config = load_config(config_file)
         warnings = validate_config(config)
@@ -251,8 +242,7 @@ class TestConfigEdgeCases:
         """Test generic validation error with fallback suggestions."""
         config_file = tmp_path / "polyglot.toml"
         # Create config with an invalid type (not related to common errors)
-        config_file.write_text(
-            """
+        config_file.write_text("""
 [project]
 name = "test"
 version = 123
@@ -264,8 +254,7 @@ files = ["test.mli"]
 [[targets]]
 language = "python"
 output_dir = "out"
-"""
-        )
+""")
 
         with pytest.raises(ConfigurationError) as exc_info:
             load_config(config_file)
@@ -285,6 +274,7 @@ class TestPythonVersionCompatibility:
     def test_tomli_import_on_old_python(self, monkeypatch):
         """Test tomli import path for Python < 3.11."""
         import sys
+
         import polyglot_ffi.core.config as config_module
 
         # Save original values

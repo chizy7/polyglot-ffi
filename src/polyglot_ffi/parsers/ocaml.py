@@ -9,7 +9,6 @@ Enhanced error messages with suggestions
 
 import re
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 from polyglot_ffi.ir.types import (
     BOOL,
@@ -30,7 +29,6 @@ from polyglot_ffi.ir.types import (
 from polyglot_ffi.utils.errors import (
     ParseError,
     suggest_type_fix,
-    suggest_syntax_fix,
 )
 
 
@@ -77,7 +75,7 @@ class OCamlParser:
             doc="",
         )
 
-    def _extract_functions(self) -> List[IRFunction]:
+    def _extract_functions(self) -> list[IRFunction]:
         """Extract all function signatures from the file."""
         functions = []
         i = 0
@@ -96,7 +94,7 @@ class OCamlParser:
 
         return functions
 
-    def _extract_type_definitions(self) -> List[IRTypeDefinition]:
+    def _extract_type_definitions(self) -> list[IRTypeDefinition]:
         """Extract all type definitions (records and variants) from the file."""
         type_defs = []
         i = 0
@@ -116,8 +114,8 @@ class OCamlParser:
         return type_defs
 
     def _parse_type_definition(
-        self, lines: List[str], start_line: int
-    ) -> Tuple[Optional[IRTypeDefinition], int]:
+        self, lines: list[str], start_line: int
+    ) -> tuple[IRTypeDefinition | None, int]:
         """
         Parse a type definition (record or variant).
 
@@ -151,7 +149,7 @@ class OCamlParser:
             # Match: type name = definition
             match = re.match(r"type\s+(\w+)\s*=\s*(.+)", full_def)
             if not match:
-                raise ParseError(f"Invalid type definition: {full_def}", start_line)
+                raise ParseError(f"Invalid type definition: {full_def}", line=start_line)
 
             type_name = match.group(1)
             type_body = match.group(2).strip()
@@ -170,7 +168,7 @@ class OCamlParser:
                 return None, lines_consumed
 
         except ParseError as e:
-            raise ParseError(f"Error parsing type definition: {e}", start_line)
+            raise ParseError(f"Error parsing type definition: {e}", line=start_line)
 
     def _parse_record_type(self, type_name: str, type_body: str, line_num: int) -> IRTypeDefinition:
         """
@@ -190,7 +188,7 @@ class OCamlParser:
             match = re.match(r"(\w+)\s*:\s*(.+)", field_str)
             if not match:
                 raise ParseError(
-                    f"Invalid record field: '{field_str}' in type '{type_name}'", line_num
+                    f"Invalid record field: '{field_str}' in type '{type_name}'", line=line_num
                 )
 
             field_name = match.group(1)
@@ -213,13 +211,13 @@ class OCamlParser:
         # Split by pipe
         variant_strs = [v.strip() for v in type_body.split("|")]
 
-        variants = {}
+        variants: dict[str, IRType | None] = {}
         for variant_str in variant_strs:
             # Match: Constructor or Constructor of type
             match = re.match(r"(\w+)(?:\s+of\s+(.+))?", variant_str)
             if not match:
                 raise ParseError(
-                    f"Invalid variant: '{variant_str}' in type '{type_name}'", line_num
+                    f"Invalid variant: '{variant_str}' in type '{type_name}'", line=line_num
                 )
 
             constructor = match.group(1)
@@ -235,8 +233,8 @@ class OCamlParser:
         return IRTypeDefinition(name=type_name, kind=TypeKind.VARIANT, variants=variants, doc="")
 
     def _parse_function(
-        self, lines: List[str], start_line: int
-    ) -> Tuple[Optional[IRFunction], str, int]:
+        self, lines: list[str], start_line: int
+    ) -> tuple[IRFunction | None, str, int]:
         """
         Parse a single function signature.
 
@@ -304,7 +302,8 @@ class OCamlParser:
 
         if len(parts) < 2:
             raise ParseError(
-                f"Function '{name}' must have at least one parameter and return type", line_num
+                f"Function '{name}' must have at least one parameter and return type",
+                line=line_num,
             )
 
         # All parts except the last are parameters
@@ -312,7 +311,7 @@ class OCamlParser:
         return_type_str = parts[-1]
 
         # Parse parameter types
-        params = []
+        params: list[IRParameter] = []
         for i, param_type_str in enumerate(param_types):
             try:
                 param_type = self._parse_type(param_type_str, line_num)
@@ -321,14 +320,14 @@ class OCamlParser:
                 params.append(IRParameter(name=param_name, type=param_type))
             except ParseError as e:
                 raise ParseError(
-                    f"Error parsing parameter {i+1} of function '{name}': {e}", line_num
+                    f"Error parsing parameter {i+1} of function '{name}': {e}", line=line_num
                 )
 
         # Parse return type
         try:
             return_type = self._parse_type(return_type_str, line_num)
         except ParseError as e:
-            raise ParseError(f"Error parsing return type of function '{name}': {e}", line_num)
+            raise ParseError(f"Error parsing return type of function '{name}': {e}", line=line_num)
 
         return IRFunction(name=name, params=params, return_type=return_type, doc="")
 

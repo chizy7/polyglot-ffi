@@ -3,18 +3,17 @@ Unit tests for error types and error formatting.
 """
 
 from pathlib import Path
-import pytest
 
 from polyglot_ffi.utils.errors import (
-    ErrorContext,
-    PolyglotFFIError,
-    ParseError,
-    TypeError_,
-    GenerationError,
     ConfigurationError,
+    ErrorContext,
+    GenerationError,
+    ParseError,
+    PolyglotFFIError,
+    TypeError_,
     ValidationError,
-    suggest_type_fix,
     suggest_syntax_fix,
+    suggest_type_fix,
 )
 
 

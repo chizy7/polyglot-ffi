@@ -5,23 +5,24 @@ These tests target uncovered branches and edge cases to reach 75% coverage.
 """
 
 import pytest
-from polyglot_ffi.generators.ctypes_gen import CtypesGenerator
+
 from polyglot_ffi.generators.c_stubs_gen import CStubGenerator
+from polyglot_ffi.generators.ctypes_gen import CtypesGenerator
 from polyglot_ffi.generators.python_gen import PythonGenerator
-from polyglot_ffi.type_system.registry import TypeRegistry
 from polyglot_ffi.ir.types import (
-    IRModule,
+    BOOL,
+    FLOAT,
+    INT,
+    STRING,
+    UNIT,
     IRFunction,
+    IRModule,
     IRParameter,
     IRType,
     IRTypeDefinition,
     TypeKind,
-    STRING,
-    INT,
-    FLOAT,
-    BOOL,
-    UNIT,
 )
+from polyglot_ffi.type_system.registry import TypeRegistry
 
 
 class TestCtypesGeneratorEdgeCases:

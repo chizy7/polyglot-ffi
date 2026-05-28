@@ -7,7 +7,7 @@ between source language parsers and target language generators.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 
 class TypeKind(Enum):
@@ -37,9 +37,9 @@ class IRType:
 
     kind: TypeKind
     name: str
-    params: List["IRType"] = field(default_factory=list)
-    fields: Dict[str, "IRType"] = field(default_factory=dict)
-    variants: Dict[str, Optional["IRType"]] = field(default_factory=dict)
+    params: list["IRType"] = field(default_factory=list)
+    fields: dict[str, "IRType"] = field(default_factory=dict)
+    variants: dict[str, Optional["IRType"]] = field(default_factory=dict)
 
     def __str__(self) -> str:
         """String representation for debugging."""
@@ -96,7 +96,7 @@ class IRFunction:
     """
 
     name: str
-    params: List[IRParameter]
+    params: list[IRParameter]
     return_type: IRType
     doc: str = ""
     is_async: bool = False
@@ -134,8 +134,8 @@ class IRTypeDefinition:
 
     name: str
     kind: TypeKind
-    fields: Dict[str, IRType] = field(default_factory=dict)
-    variants: Dict[str, Optional[IRType]] = field(default_factory=dict)
+    fields: dict[str, IRType] = field(default_factory=dict)
+    variants: dict[str, IRType | None] = field(default_factory=dict)
     doc: str = ""
 
     def __str__(self) -> str:
@@ -159,21 +159,21 @@ class IRModule:
     """
 
     name: str
-    functions: List[IRFunction] = field(default_factory=list)
-    type_definitions: List[IRTypeDefinition] = field(default_factory=list)
+    functions: list[IRFunction] = field(default_factory=list)
+    type_definitions: list[IRTypeDefinition] = field(default_factory=list)
     doc: str = ""
 
     def __str__(self) -> str:
         return f"Module {self.name} ({len(self.functions)} functions, {len(self.type_definitions)} types)"
 
-    def get_function(self, name: str) -> Optional[IRFunction]:
+    def get_function(self, name: str) -> IRFunction | None:
         """Get function by name."""
         for func in self.functions:
             if func.name == name:
                 return func
         return None
 
-    def get_type(self, name: str) -> Optional[IRTypeDefinition]:
+    def get_type(self, name: str) -> IRTypeDefinition | None:
         """Get type definition by name."""
         for typedef in self.type_definitions:
             if typedef.name == name:

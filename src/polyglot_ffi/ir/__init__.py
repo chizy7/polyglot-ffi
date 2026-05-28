@@ -1,17 +1,17 @@
 """Intermediate representation package."""
 
 from polyglot_ffi.ir.types import (
-    IRModule,
+    BOOL,
+    FLOAT,
+    INT,
+    STRING,
+    UNIT,
     IRFunction,
-    IRType,
+    IRModule,
     IRParameter,
+    IRType,
     IRTypeDefinition,
     TypeKind,
-    STRING,
-    INT,
-    FLOAT,
-    BOOL,
-    UNIT,
 )
 
 __all__ = [

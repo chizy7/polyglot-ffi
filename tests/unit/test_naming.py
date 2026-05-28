@@ -3,10 +3,11 @@ Tests for naming utilities.
 """
 
 import pytest
+
 from polyglot_ffi.utils.naming import (
+    sanitize_for_c,
     sanitize_for_dune,
     sanitize_for_python,
-    sanitize_for_c,
     sanitize_module_name,
 )
 

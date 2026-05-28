@@ -4,19 +4,18 @@ Unit tests for memory management improvements.
 Tests the memory leaks and proper cleanup function generation.
 """
 
-import pytest
 from polyglot_ffi.generators.c_stubs_gen import CStubGenerator
 from polyglot_ffi.generators.python_gen import PythonGenerator
 from polyglot_ffi.ir.types import (
-    IRModule,
+    BOOL,
+    FLOAT,
+    INT,
+    STRING,
     IRFunction,
+    IRModule,
     IRParameter,
     IRType,
     TypeKind,
-    STRING,
-    INT,
-    FLOAT,
-    BOOL,
 )
 
 

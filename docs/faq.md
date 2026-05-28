@@ -42,7 +42,7 @@ See [Installation Guide](installation.md) for detailed instructions.
 
 ### What are the system requirements?
 
-- **Python 3.8+** (required for Polyglot FFI)
+- **Python 3.10+** (required for Polyglot FFI)
 - **OCaml 4.14+** (required to build generated bindings)
 - **Dune 3.0+** (build system for OCaml)
 

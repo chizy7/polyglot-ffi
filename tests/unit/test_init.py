@@ -4,13 +4,14 @@ Unit tests for init command.
 
 import tempfile
 from pathlib import Path
+
 import pytest
 
 from polyglot_ffi.commands.init import (
-    init_project,
     generate_config,
-    generate_readme,
     generate_makefile,
+    generate_readme,
+    init_project,
 )
 
 

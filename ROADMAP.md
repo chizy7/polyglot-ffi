@@ -410,9 +410,8 @@ Polyglot FFI aims to eliminate FFI boilerplate by automatically generating type-
 ## Technology Roadmap
 
 ### Short-term (2025)
-- [x] Python 3.8-3.12 support
+- [x] Python 3.10-3.13 support
 - [x] OCaml 4.14+ support
-- [ ] Python 3.13 support
 - [ ] OCaml 5.x support
 - [ ] Rust 1.70+ support
 

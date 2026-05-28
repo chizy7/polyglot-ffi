@@ -3,14 +3,14 @@ Init command implementation.
 """
 
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 
 from polyglot_ffi.utils.naming import sanitize_module_name
 
 
 def init_project(
-    name: str, target_langs: List[str], template: str, verbose: bool
-) -> Dict[str, Any]:
+    name: str, target_langs: list[str], template: str, verbose: bool
+) -> dict[str, Any]:
     """
     Initialize a new polyglot-ffi project.
 
@@ -130,7 +130,7 @@ generated/
     }
 
 
-def generate_config(name: str, safe_module_name: str, target_langs: List[str]) -> str:
+def generate_config(name: str, safe_module_name: str, target_langs: list[str]) -> str:
     """Generate polyglot.toml configuration file."""
     # Generate [[targets]] array entries
     targets_str = "\n".join(
@@ -157,7 +157,7 @@ auto_build = false
 """
 
 
-def generate_readme(name: str, target_langs: List[str]) -> str:
+def generate_readme(name: str, target_langs: list[str]) -> str:
     """Generate README.md file."""
     return f"""# {name}
 

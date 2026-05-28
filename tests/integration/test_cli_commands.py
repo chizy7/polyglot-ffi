@@ -7,26 +7,24 @@ Tests for check, clean, watch, and other CLI functionality.
 import tempfile
 import time
 from pathlib import Path
-from typing import Dict, Any
 
 import pytest
+
 from polyglot_ffi.commands.check import (
     check_dependencies,
     check_project,
     display_check_results,
 )
 from polyglot_ffi.commands.clean import (
-    find_generated_files,
     clean_files,
     clean_project,
-    GENERATED_PATTERNS,
+    find_generated_files,
 )
 from polyglot_ffi.commands.watch import SourceFileHandler
 from polyglot_ffi.core.config import (
-    load_config,
     create_default_config,
+    load_config,
     validate_config,
-    PolyglotConfig,
 )
 
 
@@ -686,8 +684,7 @@ language = "python"
         from polyglot_ffi.utils.errors import ConfigurationError
 
         invalid_schema = temp_dir / "invalid_schema.toml"
-        invalid_schema.write_text(
-            """
+        invalid_schema.write_text("""
 [project]
 name = "test"
 
@@ -697,8 +694,7 @@ files = ["test.mli"]
 
 [[targets]]
 language = "python"
-"""
-        )
+""")
 
         with pytest.raises(ConfigurationError) as exc_info:
             load_config(invalid_schema)
@@ -710,16 +706,14 @@ language = "python"
         from polyglot_ffi.utils.errors import ConfigurationError
 
         no_targets = temp_dir / "no_targets.toml"
-        no_targets.write_text(
-            """
+        no_targets.write_text("""
 [project]
 name = "test"
 
 [source]
 language = "ocaml"
 files = ["test.mli"]
-"""
-        )
+""")
 
         # Config loads but validator should catch empty targets
         try:
@@ -770,8 +764,7 @@ files = ["test.mli"]
     def test_validate_config_duplicate_targets(self, temp_dir):
         """Test validation warning for duplicate target languages."""
         duplicate_targets = temp_dir / "duplicate.toml"
-        duplicate_targets.write_text(
-            """
+        duplicate_targets.write_text("""
 [project]
 name = "test"
 
@@ -784,8 +777,7 @@ language = "python"
 
 [[targets]]
 language = "python"
-"""
-        )
+""")
 
         config = load_config(duplicate_targets)
         warnings = validate_config(config)
@@ -795,8 +787,7 @@ language = "python"
     def test_validate_config_no_enabled_targets(self, temp_dir):
         """Test validation warning when no targets are enabled."""
         no_enabled = temp_dir / "no_enabled.toml"
-        no_enabled.write_text(
-            """
+        no_enabled.write_text("""
 [project]
 name = "test"
 
@@ -807,8 +798,7 @@ files = ["test.mli"]
 [[targets]]
 language = "python"
 enabled = false
-"""
-        )
+""")
 
         config = load_config(no_enabled)
         warnings = validate_config(config)

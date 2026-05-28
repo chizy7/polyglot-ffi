@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from polyglot_ffi.commands.generate import generate_bindings
 
 

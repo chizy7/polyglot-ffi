@@ -9,8 +9,6 @@ Generates Python wrapper code with support for:
 - Custom types (records, variants)
 """
 
-from typing import Dict
-
 from polyglot_ffi.ir.types import IRFunction, IRModule, IRParameter, IRType, TypeKind
 from polyglot_ffi.utils.naming import sanitize_module_name
 
@@ -19,7 +17,7 @@ class PythonGenerator:
     """Generate Python wrapper code."""
 
     # Map IR types to Python type hints
-    PY_TYPE_MAP: Dict[str, str] = {
+    PY_TYPE_MAP: dict[str, str] = {
         "string": "str",
         "int": "int",
         "float": "float",
@@ -28,7 +26,7 @@ class PythonGenerator:
     }
 
     # Map IR types to ctypes
-    CTYPES_MAP: Dict[str, str] = {
+    CTYPES_MAP: dict[str, str] = {
         "string": "ctypes.c_char_p",
         "int": "ctypes.c_int",
         "float": "ctypes.c_double",
@@ -299,7 +297,7 @@ class PythonGenerator:
 
     def _generate_list_to_c_conversion(self, param: "IRParameter") -> list:
         """Generate code to convert Python list to C array + length."""
-        lines = []
+        lines: list = []
         param_name = param.name
 
         if not param.type.params:
@@ -351,7 +349,7 @@ class PythonGenerator:
         self, param: "IRParameter", inner_list_type: IRType
     ) -> list:
         """Generate code to convert Python nested list (List[List[T]]) to C array of arrays."""
-        lines = []
+        lines: list = []
         param_name = param.name
 
         if not inner_list_type.params or not inner_list_type.params[0].is_primitive():
@@ -516,7 +514,7 @@ class PythonGenerator:
 
     def _generate_tuple_to_c_conversion(self, param: "IRParameter") -> list:
         """Generate code to convert Python tuple to C array (void**)."""
-        lines = []
+        lines: list = []
         param_name = param.name
 
         if not param.type.params or not all(p.is_primitive() for p in param.type.params):
