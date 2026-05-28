@@ -312,14 +312,6 @@ class TestOptionTypeEdgeCases:
 
         # Should use 'is None' check, not falsy check
         # This ensures Some(False) is not treated as None
-        lines = wrapper.split("\n")
-        found_is_none = False
-        for line in lines:
-            if "bool" in line and "if result is None:" in line:
-                found_is_none = True
-                break
-
-        # The wrapper should handle bool options with proper None check
         assert "if result is None:" in wrapper
 
     def test_option_int_zero_is_not_none(self):

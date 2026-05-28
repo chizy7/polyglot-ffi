@@ -103,7 +103,7 @@ def sanitize_module_name(name: str) -> str:
     # Check if it starts with an underscore (also invalid in OCaml modules)
     if sanitized and sanitized[0] == "_":
         raise ValueError(
-            f"Module name '{name}' is invalid: OCaml module names cannot start with an underscore.\n"
+            f"Module name '{name}' is invalid: OCaml module names cannot start with an underscore.\n"  # noqa: E501
             f"  Suggestions:\n"
             f"  • Rename the file to start with a letter (e.g., 'module{name}')\n"
             f"  • Remove leading underscores"

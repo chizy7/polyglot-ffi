@@ -162,9 +162,8 @@ class OCamlParser:
                 # Variant type
                 return self._parse_variant_type(type_name, type_body, start_line), lines_consumed
             else:
-                # Type alias - treat as custom named type
-                aliased_type = self._parse_type(type_body, start_line)
-                # For now, we'll skip pure type aliases as they don't need special handling
+                # Type alias - parse for validation, but skip (no special handling needed)
+                self._parse_type(type_body, start_line)
                 return None, lines_consumed
 
         except ParseError as e:

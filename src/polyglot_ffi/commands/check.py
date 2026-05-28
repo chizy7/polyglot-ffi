@@ -120,7 +120,7 @@ def display_check_results(results: dict[str, Any]) -> None:
                 f"\n[bold]Project:[/bold] {config.project.name} v{config.project.version}"
             )
             console.print(
-                f"[bold]Source:[/bold] {config.source.language} ({len(config.source.files)} file(s))"
+                f"[bold]Source:[/bold] {config.source.language} ({len(config.source.files)} file(s))"  # noqa: E501
             )
 
             # Targets table
