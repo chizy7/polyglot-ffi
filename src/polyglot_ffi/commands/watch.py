@@ -4,21 +4,19 @@ Watch command implementation.
 Watch source files and auto-regenerate bindings on changes.
 """
 
-import time
-from pathlib import Path
-from typing import List, Set, Optional
 import subprocess
+import time
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler, FileSystemEvent
 from rich.console import Console
-from rich.live import Live
-from rich.table import Table
+from watchdog.events import FileSystemEvent, FileSystemEventHandler
+from watchdog.observers import Observer
 
-from polyglot_ffi.core.config import load_config
 from polyglot_ffi.commands.generate import generate_bindings
+from polyglot_ffi.core.config import load_config
 from polyglot_ffi.utils.errors import ConfigurationError
-
 
 console = Console()
 
@@ -33,15 +31,15 @@ class SourceFileHandler(FileSystemEventHandler):
 
     def __init__(
         self,
-        watched_files: Set[Path],
-        on_change_callback,
+        watched_files: set[Path],
+        on_change_callback: Callable[[Path], None],
         debounce_seconds: float = 0.5,
-        time_provider=None,
+        time_provider: Callable[[], float] | None = None,
     ):
         super().__init__()
         self.watched_files = {f.resolve() for f in watched_files}
         self.on_change_callback = on_change_callback
-        self.last_modified = {}
+        self.last_modified: dict[Path, float] = {}
         self.debounce_seconds = debounce_seconds
         # time_provider is a callable that returns current time in seconds.
         # Default to time.time for production; tests can inject a fake provider.
@@ -52,7 +50,10 @@ class SourceFileHandler(FileSystemEventHandler):
         if event.is_directory:
             return
 
-        file_path = Path(event.src_path).resolve()
+        src_path = event.src_path
+        if isinstance(src_path, bytes):
+            src_path = src_path.decode()
+        file_path = Path(src_path).resolve()
 
         # Check if this is a file we're watching
         if file_path not in self.watched_files:
@@ -72,7 +73,7 @@ class SourceFileHandler(FileSystemEventHandler):
 
 
 def watch_files(
-    paths: List[Path],
+    paths: list[Path],
     build: bool = False,
     verbose: bool = False,
 ) -> None:
@@ -86,7 +87,7 @@ def watch_files(
     """
     # Load configuration to find source files
     config_path = Path.cwd() / "polyglot.toml"
-    watched_files: Set[Path] = set()
+    watched_files: set[Path] = set()
 
     if config_path.exists():
         try:
@@ -124,7 +125,7 @@ def watch_files(
         return
 
     # Statistics
-    stats = {
+    stats: dict[str, Any] = {
         "regenerations": 0,
         "successes": 0,
         "failures": 0,
@@ -138,7 +139,7 @@ def watch_files(
         stats["last_file"] = str(file_path.name)
 
         console.print(f"\n[yellow]Change detected:[/yellow] {file_path.name}")
-        console.print(f"[dim]Regenerating bindings...[/dim]")
+        console.print("[dim]Regenerating bindings...[/dim]")
 
         try:
             # Regenerate bindings
@@ -178,7 +179,7 @@ def watch_files(
     observer = Observer()
 
     # Watch directories containing the files
-    watched_dirs: Set[Path] = {f.parent for f in watched_files}
+    watched_dirs: set[Path] = {f.parent for f in watched_files}
     for directory in watched_dirs:
         observer.schedule(event_handler, str(directory), recursive=False)
 
@@ -186,12 +187,12 @@ def watch_files(
     observer.start()
 
     # Display initial status
-    console.print(f"\n[bold green]Watch mode started[/bold green]")
+    console.print("\n[bold green]Watch mode started[/bold green]")
     console.print(f"Watching {len(watched_files)} file(s):\n")
     for file in sorted(watched_files):
         console.print(f"  [cyan]→[/cyan] {file}")
 
-    console.print(f"\n[dim]Press Ctrl+C to stop[/dim]\n")
+    console.print("\n[dim]Press Ctrl+C to stop[/dim]\n")
 
     # Keep running and display live stats
     try:

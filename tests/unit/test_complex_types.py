@@ -3,8 +3,9 @@ Tests for parsing complex types: options, lists, tuples, records, and variants.
 """
 
 import pytest
+
+from polyglot_ffi.ir.types import TypeKind
 from polyglot_ffi.parsers.ocaml import OCamlParser, ParseError
-from polyglot_ffi.ir.types import TypeKind, IRTypeDefinition
 
 
 class TestOptionTypes:

@@ -4,20 +4,19 @@ Enhanced error types with rich context and suggestions.
 Developer Experience - Better error messages.
 """
 
-from pathlib import Path
-from typing import List, Optional
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
 class ErrorContext:
     """Context information for an error."""
 
-    file_path: Optional[Path] = None
-    line: Optional[int] = None
-    column: Optional[int] = None
-    code_snippet: Optional[str] = None
-    suggestion: Optional[str] = None
+    file_path: Path | None = None
+    line: int | None = None
+    column: int | None = None
+    code_snippet: str | None = None
+    suggestion: str | None = None
 
 
 class PolyglotFFIError(Exception):
@@ -26,8 +25,8 @@ class PolyglotFFIError(Exception):
     def __init__(
         self,
         message: str,
-        context: Optional[ErrorContext] = None,
-        suggestions: Optional[List[str]] = None,
+        context: ErrorContext | None = None,
+        suggestions: list[str] | None = None,
     ):
         self.message = message
         self.context = context or ErrorContext()
@@ -101,11 +100,11 @@ class ParseError(PolyglotFFIError):
     def __init__(
         self,
         message: str,
-        file_path: Optional[Path] = None,
-        line: Optional[int] = None,
-        column: Optional[int] = None,
-        code_snippet: Optional[str] = None,
-        suggestions: Optional[List[str]] = None,
+        file_path: Path | None = None,
+        line: int | None = None,
+        column: int | None = None,
+        code_snippet: str | None = None,
+        suggestions: list[str] | None = None,
     ):
         context = ErrorContext(
             file_path=file_path,
@@ -134,8 +133,8 @@ class ConfigurationError(PolyglotFFIError):
     def __init__(
         self,
         message: str,
-        config_path: Optional[Path] = None,
-        suggestions: Optional[List[str]] = None,
+        config_path: Path | None = None,
+        suggestions: list[str] | None = None,
     ):
         context = ErrorContext(file_path=config_path)
         super().__init__(message, context, suggestions)
@@ -150,7 +149,7 @@ class ValidationError(PolyglotFFIError):
 # Error suggestion helpers
 
 
-def suggest_type_fix(invalid_type: str) -> List[str]:
+def suggest_type_fix(invalid_type: str) -> list[str]:
     """Suggest fixes for invalid type names."""
     suggestions = []
 
@@ -193,7 +192,7 @@ def suggest_type_fix(invalid_type: str) -> List[str]:
     return suggestions
 
 
-def suggest_syntax_fix(syntax_error: str) -> List[str]:
+def suggest_syntax_fix(syntax_error: str) -> list[str]:
     """Suggest fixes for syntax errors."""
     suggestions = []
 

@@ -4,21 +4,20 @@ Check command implementation.
 Validate project configuration and dependencies.
 """
 
-from pathlib import Path
-from typing import Dict, List, Any, Optional
 import shutil
+from pathlib import Path
+from typing import Any
 
 from rich.console import Console
 from rich.table import Table
 
 from polyglot_ffi.core.config import load_config, validate_config
-from polyglot_ffi.utils.errors import ConfigurationError, ValidationError
-
+from polyglot_ffi.utils.errors import ConfigurationError
 
 console = Console()
 
 
-def check_dependencies(lang: Optional[str] = None) -> Dict[str, bool]:
+def check_dependencies(lang: str | None = None) -> dict[str, bool]:
     """
     Check if required dependencies are available.
 
@@ -49,7 +48,7 @@ def check_dependencies(lang: Optional[str] = None) -> Dict[str, bool]:
     return deps
 
 
-def check_project(check_deps: bool = False, lang: Optional[str] = None) -> Dict[str, Any]:
+def check_project(check_deps: bool = False, lang: str | None = None) -> dict[str, Any]:
     """
     Validate project configuration and dependencies.
 
@@ -60,7 +59,7 @@ def check_project(check_deps: bool = False, lang: Optional[str] = None) -> Dict[
     Returns:
         Dictionary with check results
     """
-    results = {
+    results: dict[str, Any] = {
         "config_valid": False,
         "warnings": [],
         "errors": [],
@@ -104,7 +103,7 @@ def check_project(check_deps: bool = False, lang: Optional[str] = None) -> Dict[
     return results
 
 
-def display_check_results(results: Dict[str, Any]) -> None:
+def display_check_results(results: dict[str, Any]) -> None:
     """
     Display check results in a nice format.
 
@@ -126,7 +125,7 @@ def display_check_results(results: Dict[str, Any]) -> None:
 
             # Targets table
             if config.targets:
-                console.print(f"\n[bold]Targets:[/bold]")
+                console.print("\n[bold]Targets:[/bold]")
                 table = Table(show_header=True)
                 table.add_column("Language")
                 table.add_column("Output Directory")
@@ -143,7 +142,7 @@ def display_check_results(results: Dict[str, Any]) -> None:
 
     # Dependencies
     if results["dependencies"]:
-        console.print(f"\n[bold]Dependencies:[/bold]")
+        console.print("\n[bold]Dependencies:[/bold]")
         table = Table(show_header=True)
         table.add_column("Tool")
         table.add_column("Status")
@@ -156,13 +155,13 @@ def display_check_results(results: Dict[str, Any]) -> None:
 
     # Warnings
     if results["warnings"]:
-        console.print(f"\n[bold yellow]Warnings:[/bold yellow]")
+        console.print("\n[bold yellow]Warnings:[/bold yellow]")
         for warning in results["warnings"]:
             console.print(f"  [yellow]⚠[/yellow] {warning}")
 
     # Errors
     if results["errors"]:
-        console.print(f"\n[bold red]Errors:[/bold red]")
+        console.print("\n[bold red]Errors:[/bold red]")
         for error in results["errors"]:
             console.print(f"  [red]✗[/red] {error}")
 

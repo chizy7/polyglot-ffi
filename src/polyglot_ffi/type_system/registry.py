@@ -5,8 +5,8 @@ The registry allows defining how types in the IR map to types
 in different target languages.
 """
 
-from functools import lru_cache
-from typing import Dict, Optional, Callable
+from collections.abc import Callable
+
 from polyglot_ffi.ir.types import IRType, TypeKind
 
 
@@ -31,13 +31,13 @@ class TypeRegistry:
         python_type = registry.get_mapping("string", "python")  # Returns "str"
     """
 
-    def __init__(self):
-        self._primitive_mappings: Dict[str, Dict[str, str]] = {}
-        self._custom_converters: Dict[str, Dict[str, Callable]] = {}
+    def __init__(self) -> None:
+        self._primitive_mappings: dict[str, dict[str, str]] = {}
+        self._custom_converters: dict[str, dict[str, Callable]] = {}
         # Cache for type mappings (cleared when registry is modified)
-        self._mapping_cache: Dict[tuple, str] = {}
+        self._mapping_cache: dict[tuple, str] = {}
 
-    def register_primitive(self, ir_type_name: str, mappings: Dict[str, str]) -> None:
+    def register_primitive(self, ir_type_name: str, mappings: dict[str, str]) -> None:
         """
         Register a primitive type mapping.
 
@@ -188,7 +188,8 @@ class TypeRegistry:
             if ir_type.name in self._custom_converters:
                 if target_lang in self._custom_converters[ir_type.name]:
                     converter = self._custom_converters[ir_type.name][target_lang]
-                    return converter(ir_type)
+                    result: str = converter(ir_type)
+                    return result
 
             # Default: use the type name as-is (with some conventions)
             if target_lang == "python":
@@ -228,7 +229,7 @@ class TypeRegistry:
 
 
 # Global default registry instance
-_default_registry: Optional[TypeRegistry] = None
+_default_registry: TypeRegistry | None = None
 
 
 def get_default_registry() -> TypeRegistry:

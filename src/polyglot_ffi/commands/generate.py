@@ -3,13 +3,13 @@ Generate command implementation.
 """
 
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any
 
-from polyglot_ffi.generators.ctypes_gen import CtypesGenerator
 from polyglot_ffi.generators.c_stubs_gen import CStubGenerator
-from polyglot_ffi.generators.python_gen import PythonGenerator
+from polyglot_ffi.generators.ctypes_gen import CtypesGenerator
 from polyglot_ffi.generators.dune_gen import DuneGenerator
-from polyglot_ffi.parsers.ocaml import parse_mli_file, ParseError
+from polyglot_ffi.generators.python_gen import PythonGenerator
+from polyglot_ffi.parsers.ocaml import ParseError, parse_mli_file
 from polyglot_ffi.utils.naming import sanitize_module_name
 
 
@@ -37,15 +37,15 @@ def _write_file_with_error_handling(file_path: Path, content: str) -> None:
 
 
 def generate_bindings(
-    source_file: Optional[str],
-    output_dir: Optional[str],
-    module_name: Optional[str],
-    target_langs: Optional[List[str]],
+    source_file: str | None,
+    output_dir: str | None,
+    module_name: str | None,
+    target_langs: list[str] | None,
     dry_run: bool,
     force: bool,
     verbose: bool,
-    ocaml_libraries: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    ocaml_libraries: list[str] | None = None,
+) -> dict[str, Any]:
     """
     Generate FFI bindings from a source file.
 
@@ -133,7 +133,7 @@ def generate_bindings(
             print(
                 f"Warning: Output directory '{output_path}' already exists with {len(existing_files)} file(s)."
             )
-            print(f"  Existing files may be overwritten. Use --force to suppress this warning.")
+            print("  Existing files may be overwritten. Use --force to suppress this warning.")
 
     generated_files = []
 

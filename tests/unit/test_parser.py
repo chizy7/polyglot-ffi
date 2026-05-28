@@ -3,8 +3,9 @@ Unit tests for OCaml parser.
 """
 
 import pytest
-from polyglot_ffi.parsers.ocaml import OCamlParser, ParseError
+
 from polyglot_ffi.ir.types import TypeKind
+from polyglot_ffi.parsers.ocaml import OCamlParser, ParseError
 
 
 class TestOCamlParser:
@@ -188,7 +189,6 @@ type = invalid_format
 
     def test_parameter_parsing_error_with_mock(self):
         """Test error handling when parsing parameter types fails."""
-        from unittest.mock import Mock, patch
 
         content = """
 val test : string -> int

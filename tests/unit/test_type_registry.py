@@ -3,16 +3,17 @@ Tests for the Type Registry system.
 """
 
 import pytest
-from polyglot_ffi.type_system.registry import TypeRegistry, TypeMappingError
-from polyglot_ffi.type_system.builtin import register_builtin_types
+
 from polyglot_ffi.ir.types import (
     IRType,
     TypeKind,
-    ir_primitive,
-    ir_option,
     ir_list,
+    ir_option,
+    ir_primitive,
     ir_tuple,
 )
+from polyglot_ffi.type_system.builtin import register_builtin_types
+from polyglot_ffi.type_system.registry import TypeMappingError, TypeRegistry
 
 
 class TestTypeRegistry:

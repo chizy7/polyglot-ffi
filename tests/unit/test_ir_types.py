@@ -2,19 +2,17 @@
 Unit tests for IR (Intermediate Representation) types.
 """
 
-import pytest
-
 from polyglot_ffi.ir.types import (
-    TypeKind,
-    IRType,
-    IRParameter,
+    BOOL,
+    FLOAT,
+    INT,
+    STRING,
+    UNIT,
     IRFunction,
     IRModule,
-    STRING,
-    INT,
-    FLOAT,
-    BOOL,
-    UNIT,
+    IRParameter,
+    IRType,
+    TypeKind,
 )
 
 
@@ -557,7 +555,7 @@ class TestHelperFunctions:
 
     def test_ir_tuple_helper(self):
         """Test ir_tuple helper function."""
-        from polyglot_ffi.ir.types import ir_tuple, ir_primitive
+        from polyglot_ffi.ir.types import ir_primitive, ir_tuple
 
         t = ir_tuple(ir_primitive("int"), ir_primitive("string"))
         assert t.kind == TypeKind.TUPLE

@@ -4,15 +4,13 @@ Clean command implementation.
 Remove generated files.
 """
 
-from pathlib import Path
-from typing import List, Set
 import shutil
+from pathlib import Path
 
 from rich.console import Console
 
 from polyglot_ffi.core.config import load_config
 from polyglot_ffi.utils.errors import ConfigurationError
-
 
 console = Console()
 
@@ -35,7 +33,7 @@ GENERATED_PATTERNS = [
 ]
 
 
-def find_generated_files(output_dirs: List[Path], all_files: bool = False) -> Set[Path]:
+def find_generated_files(output_dirs: list[Path], all_files: bool = False) -> set[Path]:
     """
     Find all generated files in output directories.
 
@@ -46,7 +44,7 @@ def find_generated_files(output_dirs: List[Path], all_files: bool = False) -> Se
     Returns:
         Set of file paths to clean
     """
-    files_to_clean: Set[Path] = set()
+    files_to_clean: set[Path] = set()
 
     for output_dir in output_dirs:
         if not output_dir.exists():
@@ -66,7 +64,7 @@ def find_generated_files(output_dirs: List[Path], all_files: bool = False) -> Se
     return files_to_clean
 
 
-def clean_files(files: Set[Path], dry_run: bool = False) -> int:
+def clean_files(files: set[Path], dry_run: bool = False) -> int:
     """
     Clean (delete) specified files.
 
@@ -116,7 +114,7 @@ def clean_project(all_files: bool = False, dry_run: bool = False) -> int:
     """
     # Try to load config to find output directories
     config_path = Path.cwd() / "polyglot.toml"
-    output_dirs: List[Path] = []
+    output_dirs: list[Path] = []
 
     if config_path.exists():
         try:

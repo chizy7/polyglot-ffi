@@ -6,7 +6,7 @@ Support for polyglot.toml configuration files.
 
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any
 
 # Handle tomli/tomllib (Python < 3.11 needs tomli)
 if sys.version_info >= (3, 11):
@@ -17,7 +17,8 @@ else:
     except ImportError:
         tomllib = None  # type: ignore
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
 from polyglot_ffi.utils.errors import ConfigurationError
 
 
@@ -26,18 +27,18 @@ class ProjectConfig(BaseModel):
 
     name: str = Field(..., description="Project name")
     version: str = Field(default="0.1.0", description="Project version")
-    description: Optional[str] = Field(None, description="Project description")
-    authors: List[str] = Field(default_factory=list, description="Project authors")
+    description: str | None = Field(None, description="Project description")
+    authors: list[str] = Field(default_factory=list, description="Project authors")
 
 
 class SourceConfig(BaseModel):
     """Source language configuration."""
 
     language: str = Field(..., description="Source language (e.g., 'ocaml')")
-    files: List[str] = Field(default_factory=list, description="Source files to process")
-    dir: Optional[str] = Field(None, description="Source directory")
-    exclude: List[str] = Field(default_factory=list, description="Files to exclude")
-    libraries: List[str] = Field(
+    files: list[str] = Field(default_factory=list, description="Source files to process")
+    dir: str | None = Field(None, description="Source directory")
+    exclude: list[str] = Field(default_factory=list, description="Files to exclude")
+    libraries: list[str] = Field(
         default_factory=list, description="OCaml libraries to link (e.g., ['str', 'unix'])"
     )
 
@@ -72,16 +73,16 @@ class BuildConfig(BaseModel):
     """Build system configuration."""
 
     auto_build: bool = Field(default=False, description="Auto-build after generation")
-    build_command: Optional[str] = Field(None, description="Custom build command")
+    build_command: str | None = Field(default=None, description="Custom build command")
 
 
 class TypeMappingConfig(BaseModel):
     """Custom type mapping configuration."""
 
-    ocaml: Optional[str] = None
-    python: Optional[str] = None
-    rust: Optional[str] = None
-    c: Optional[str] = None
+    ocaml: str | None = None
+    python: str | None = None
+    rust: str | None = None
+    c: str | None = None
 
 
 class PolyglotConfig(BaseModel):
@@ -89,15 +90,15 @@ class PolyglotConfig(BaseModel):
 
     project: ProjectConfig
     source: SourceConfig
-    targets: List[TargetConfig] = Field(default_factory=list)
-    build: BuildConfig = Field(default_factory=BuildConfig)
-    type_mappings: Dict[str, TypeMappingConfig] = Field(
+    targets: list[TargetConfig] = Field(default_factory=list)
+    build: BuildConfig = Field(default_factory=lambda: BuildConfig())
+    type_mappings: dict[str, TypeMappingConfig] = Field(
         default_factory=dict, description="Custom type mappings"
     )
 
     @field_validator("targets")
     @classmethod
-    def validate_targets(cls, v: List[TargetConfig]) -> List[TargetConfig]:
+    def validate_targets(cls, v: list[TargetConfig]) -> list[TargetConfig]:
         """Ensure at least one target is configured."""
         if not v:
             raise ValueError("At least one target language must be configured")
@@ -204,7 +205,7 @@ def load_config(config_path: Path) -> PolyglotConfig:
         )
 
 
-def create_default_config(project_name: str, target_langs: List[str]) -> Dict[str, Any]:
+def create_default_config(project_name: str, target_langs: list[str]) -> dict[str, Any]:
     """
     Create a default polyglot.toml configuration.
 
@@ -236,7 +237,7 @@ def create_default_config(project_name: str, target_langs: List[str]) -> Dict[st
     }
 
 
-def validate_config(config: PolyglotConfig) -> List[str]:
+def validate_config(config: PolyglotConfig) -> list[str]:
     """
     Validate configuration and return list of warnings.
 

@@ -3,7 +3,7 @@
 **Automatic FFI bindings generator for polyglot projects**
 
 [![PyPI version](https://img.shields.io/pypi/v/polyglot-ffi.svg)](https://pypi.org/project/polyglot-ffi/)
-[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org)
 [![Build](https://github.com/chizy7/polyglot-ffi/actions/workflows/ci.yml/badge.svg)](https://github.com/chizy7/polyglot-ffi/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/chizy7/polyglot-ffi/branch/master/graph/badge.svg)](https://codecov.io/gh/chizy7/polyglot-ffi)
 [![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://polyglotffi.com/)

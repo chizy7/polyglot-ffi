@@ -4,7 +4,6 @@ Command-line interface for Polyglot FFI.
 
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
@@ -38,7 +37,7 @@ def cli(ctx: click.Context, verbose: bool) -> None:
 @click.pass_context
 def init(
     ctx: click.Context,
-    project_name: Optional[str],
+    project_name: str | None,
     lang: tuple,
     template: str,
     interactive: bool,
@@ -96,9 +95,9 @@ def init(
             progress.update(task, completed=True)
 
         console.print(f"[green]✓[/green] Project '{project_name}' created!")
-        console.print(f"\nNext steps:")
+        console.print("\nNext steps:")
         console.print(f"  cd {project_name}")
-        console.print(f"  polyglot-ffi generate")
+        console.print("  polyglot-ffi generate")
 
     except Exception as e:
         # Check if it's a polyglot-ffi error with rich formatting
@@ -124,9 +123,9 @@ def init(
 @click.pass_context
 def generate(
     ctx: click.Context,
-    source_file: Optional[str],
-    output: Optional[str],
-    name: Optional[str],
+    source_file: str | None,
+    output: str | None,
+    name: str | None,
     target: tuple,
     dry_run: bool,
     force: bool,
@@ -168,20 +167,20 @@ def generate(
             # Validate config and show warnings
             warnings = validate_config(config)
             if warnings:
-                console.print(f"\n[yellow]Configuration warnings:[/yellow]")
+                console.print("\n[yellow]Configuration warnings:[/yellow]")
                 for warning in warnings:
                     console.print(f"  [yellow]⚠[/yellow] {warning}")
 
                 # If no targets are enabled, provide helpful suggestions
                 if "No target languages are enabled" in warnings:
-                    console.print(f"\n[yellow]Suggestions:[/yellow]")
+                    console.print("\n[yellow]Suggestions:[/yellow]")
                     console.print(
-                        f"  • Set 'enabled = true' for at least one target in polyglot.toml"
+                        "  • Set 'enabled = true' for at least one target in polyglot.toml"
                     )
                     console.print(
-                        f"  • Or use --target flag to specify targets: polyglot-ffi generate --target python"
+                        "  • Or use --target flag to specify targets: polyglot-ffi generate --target python"
                     )
-                    console.print(f"  • Run 'polyglot-ffi check' to validate your configuration")
+                    console.print("  • Run 'polyglot-ffi check' to validate your configuration")
                     console.print()
 
             # Get source file from config if not provided
@@ -285,8 +284,9 @@ def watch(ctx: click.Context, paths: tuple, build: bool, verbose: bool) -> None:
         polyglot-ffi watch src/*.mli
         polyglot-ffi watch --build
     """
-    from polyglot_ffi.commands.watch import watch_files
     from pathlib import Path
+
+    from polyglot_ffi.commands.watch import watch_files
 
     # Use local verbose flag OR global verbose flag (support both positions)
     verbose = verbose or ctx.obj.get("global_verbose", False)
@@ -314,7 +314,7 @@ def watch(ctx: click.Context, paths: tuple, build: bool, verbose: bool) -> None:
 @click.option("--lang", help="Check specific language support")
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
 @click.pass_context
-def check(ctx: click.Context, check_deps: bool, lang: Optional[str], verbose: bool) -> None:
+def check(ctx: click.Context, check_deps: bool, lang: str | None, verbose: bool) -> None:
     """
     Validate project configuration and dependencies.
 
