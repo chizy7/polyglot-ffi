@@ -268,18 +268,17 @@ class TestPythonVersionCompatibility:
     """Test Python version compatibility for tomli import."""
 
     @pytest.mark.skipif(
-        sys.version_info < (3, 9),
-        reason="Pydantic reload incompatible with Python 3.8 (requires GenericAlias)",
+        sys.version_info >= (3, 11),
+        reason="tomli is only installed on Python < 3.11; on 3.11+ tomllib comes from stdlib",
     )
     def test_tomli_import_on_old_python(self, monkeypatch):
-        """Test tomli import path for Python < 3.11."""
+        """Verify the tomli fallback resolves on Python < 3.11."""
         import sys
 
         import polyglot_ffi.core.config as config_module
 
-        # Save original values
+        # Save original version (tomllib is restored via importlib.reload below)
         original_version = sys.version_info
-        original_tomllib = config_module.tomllib
 
         try:
             # Simulate Python 3.10
@@ -291,9 +290,9 @@ class TestPythonVersionCompatibility:
             importlib.reload(config_module)
 
             # tomllib should be imported from tomli on Python < 3.11
-            # verify the import succeeded (tomllib is available)
-            # assert config_module.tomllib is not None, "tomllib should be available via tomli fallback"
-            assert config_module.tomllib is not None or config_module.tomllib is None
+            assert (
+                config_module.tomllib is not None
+            ), "tomllib should be available via tomli fallback"
 
         finally:
             # Restore original values

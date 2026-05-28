@@ -88,7 +88,7 @@ def init(
         ) as progress:
             task = progress.add_task("Initializing project...", total=None)
 
-            result = init_project(
+            init_project(
                 name=project_name, target_langs=list(lang), template=template, verbose=verbose
             )
 
@@ -178,7 +178,7 @@ def generate(
                         "  • Set 'enabled = true' for at least one target in polyglot.toml"
                     )
                     console.print(
-                        "  • Or use --target flag to specify targets: polyglot-ffi generate --target python"
+                        "  • Or use --target flag to specify targets: polyglot-ffi generate --target python"  # noqa: E501
                     )
                     console.print("  • Run 'polyglot-ffi check' to validate your configuration")
                     console.print()

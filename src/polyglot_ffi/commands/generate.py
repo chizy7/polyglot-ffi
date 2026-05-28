@@ -118,7 +118,7 @@ def generate_bindings(
         print(f"✓ Found {len(ir_module.functions)} function(s)")
         for func in ir_module.functions:
             print(
-                f"  - {func.name}: {' -> '.join(str(p.type) for p in func.params)} -> {func.return_type}"
+                f"  - {func.name}: {' -> '.join(str(p.type) for p in func.params)} -> {func.return_type}"  # noqa: E501
             )
 
     # Create output directory
@@ -131,7 +131,7 @@ def generate_bindings(
         existing_files = list(output_path.glob("*"))
         if existing_files:
             print(
-                f"Warning: Output directory '{output_path}' already exists with {len(existing_files)} file(s)."
+                f"Warning: Output directory '{output_path}' already exists with {len(existing_files)} file(s)."  # noqa: E501
             )
             print("  Existing files may be overwritten. Use --force to suppress this warning.")
 

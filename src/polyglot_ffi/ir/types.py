@@ -164,7 +164,7 @@ class IRModule:
     doc: str = ""
 
     def __str__(self) -> str:
-        return f"Module {self.name} ({len(self.functions)} functions, {len(self.type_definitions)} types)"
+        return f"Module {self.name} ({len(self.functions)} functions, {len(self.type_definitions)} types)"  # noqa: E501
 
     def get_function(self, name: str) -> IRFunction | None:
         """Get function by name."""

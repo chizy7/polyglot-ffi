@@ -182,7 +182,7 @@ def load_config(config_path: Path) -> PolyglotConfig:
         if "Field required" in error_msg or "missing" in error_msg.lower():
             suggestions.append("Add the required section to your polyglot.toml")
             suggestions.append(
-                "Required sections: 'project' (with name field), 'source' (with language), 'targets' (array)"
+                "Required sections: 'project' (with name field), 'source' (with language), 'targets' (array)"  # noqa: E501
             )
             suggestions.append("Example: See the template created by 'polyglot-ffi init'")
         # Check if it's an unsupported language error

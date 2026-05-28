@@ -317,7 +317,6 @@ enabled = true
     def test_clean_files_dry_run(self, generated_files_dir, capsys):
         """Test cleaning files in dry-run mode."""
         files_to_clean = find_generated_files([generated_files_dir], all_files=False)
-        initial_count = len(files_to_clean)
 
         count = clean_files(files_to_clean, dry_run=True)
 
@@ -388,7 +387,7 @@ enabled = true
         # Create some files
         (generated_files_dir / "test_stubs.c").write_text("test")
 
-        count = clean_project(all_files=False, dry_run=True)
+        clean_project(all_files=False, dry_run=True)
 
         captured = capsys.readouterr()
         assert "Dry run" in captured.out
@@ -718,8 +717,8 @@ files = ["test.mli"]
         # Config loads but validator should catch empty targets
         try:
             config = load_config(no_targets)
-            # If it loads, validate should warn about it
-            warnings = validate_config(config)
+            # If it loads, validate should run without error
+            validate_config(config)
             # Should have no targets
             assert len(config.targets) == 0 or all(not t.enabled for t in config.targets)
         except ConfigurationError:
